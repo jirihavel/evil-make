@@ -1,3 +1,3 @@
-include make/system/unix.make
+include $(MAKEDIR)/system/unix.make
 
 DLLEXT:=.so

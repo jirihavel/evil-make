@@ -15,7 +15,7 @@
 ifneq ($(HAVE_PIC),)
  # obj/[config-]pic
  EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic 
- include make/compile-common.make
+ include $(MAKEDIR)/compile-common.make
  $(OBJS):PIC:=1
  PIC_OBJS:=$(OBJS)
  PIC_DEPS:=$(DEPS)
@@ -23,6 +23,6 @@ endif
 
 # obj[/config]
 EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
-include make/compile-common.make
+include $(MAKEDIR)/compile-common.make
 
 # end

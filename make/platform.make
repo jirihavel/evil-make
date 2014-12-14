@@ -84,6 +84,8 @@ endif
 # Source directories
 ##################################################
 
+MAKEDIR:=$(if $(srcdir),$(srcdir)/)make
+
 INCDIR:=$(if $(srcdir),$(srcdir)/)include
 SRCDIR:=$(if $(srcdir),$(srcdir)/)src
 ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
@@ -130,24 +132,6 @@ always:
 # add $$(@D)/.f as rule dependency
 
 ##################################################
-# Commands
-##################################################
-
-CompileCommandCheck=$(OBJDIR)/compile$$(suffix $$*).cmd
-
-LinkCommandCheck=$(OBJDIR)/link$$(suffix $$@).cmd
-
-#Compile{.c,.cpp,.cc} - gcc -c -o $@ $^
-# switch according to $^ extension
-# (compiler)
-
-#Link{.lib,.dll,.bin} - ar -rcs $@
-# switch according to $@ extension
-# (compiler)
-
-# all commands are recursively expanded
-
-##################################################
 # Common flags
 ##################################################
 
@@ -189,22 +173,22 @@ endif
 ifndef SYSTEM
  SYSTEM:=detect
 endif
-include make/system/$(SYSTEM).make
+include $(MAKEDIR)/system/$(SYSTEM).make
 
 ifndef COMPILER
  COMPILER:=gcc
 endif
-include make/compiler/$(COMPILER).make
+include $(MAKEDIR)/compiler/$(COMPILER).make
 
 ifndef ENVIRONMENT
  ENVIRONMENT:=default
 endif
-include make/environment/$(ENVIRONMENT).make
+include $(MAKEDIR)/environment/$(ENVIRONMENT).make
 
 ifndef HARDWARE
  HARDWARE:=generic
 endif
-include make/hardware/$(HARDWARE).make
+include $(MAKEDIR)/hardware/$(HARDWARE).make
 
 ##################################################
 # Command file parameters
@@ -227,4 +211,8 @@ CFG_SED+=-e's/@HARDWARE@/$(HARDWARE)/g'
 .PHONY:config
 config:
 	@sed $(CFG_SED) make/config.make.in > config.make
+
+init:
+	echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
+	echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
 #end

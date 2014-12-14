@@ -14,7 +14,7 @@
 # BIN
 
 # compile (sets OBJS)
-include make/compile.make
+include $(MAKEDIR)/compile.make
 
 OBJS+=$(ADD_OBJS)
 
@@ -31,7 +31,7 @@ EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd
 $(EM_CMD):always $$(@D)/.f
 	$(call updateIfNotEqual,$(Link.bin) $(EM_LINK))
 
-include make/compiler/$(COMPILER_KIND)/bin.make 
+include $(MAKEDIR)/compiler/$(COMPILER_KIND)/bin.make 
 
 ifneq ($(TARGET),)
  .PHONY:$(TARGET) install-$(TARGET) internal-install-$(TARGET)

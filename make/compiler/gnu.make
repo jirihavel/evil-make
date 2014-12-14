@@ -16,9 +16,11 @@ Compile.C=$(Compile.cpp)
 
 EM_LinkFlags=-o $@ -Wl,-Map=$@.map $(LinkFlags)
 
+EM_Linker=$(CXX)
+
 Link.lib=$(AR) -rcs $@
-Link.dll=$(CXX) -shared $(EM_LinkFlags) $(LinkFlags.dll) $(LDFLAGS) $(LDLIBS)
-Link.bin=$(CXX) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+Link.dll=$(EM_Linker) -shared $(EM_LinkFlags) $(LinkFlags.dll) $(LDFLAGS) $(LDLIBS)
+Link.bin=$(EM_Linker) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
 
 updateIfNotEqual=@echo '$1' | cmp -s - $@ || echo '$1' > $@
 

@@ -9,11 +9,13 @@ ifndef DLLDIR
  DLLDIR:=$(BINDIR)
 endif
 
-MKDIR:=make\system\windows\mkdir.bat
-#RMDIR:=rmdir /s /q
+MKDIR:=mkdir -p
+COPY:=cp
 
-COPY:=make\system\windows\copy.bat
-INSTALL:=make\system\windows\copy.bat
+#MKDIR:=$(srcdir:/=\\)\make\system\windows\mkdir.bat
+#RMDIR:=rmdir /s /q
+#COPY:=$(srcdir:/=\\)\make\system\windows\copy.bat
+#INSTALL:=$(srcdir)\make\system\windows\copy.bat
 INSTALL_PROGRAM:=$(INSTALL)
 INSTALL_DATA:=$(INSTALL)
 

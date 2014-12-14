@@ -10,4 +10,4 @@ else
   SYSTEM:=osx
  endif
 endif
-include make/system/$(SYSTEM).make
+include $(MAKEDIR)/system/$(SYSTEM).make

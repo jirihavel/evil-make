@@ -13,14 +13,14 @@
 # LIB
 
 # compile (sets OBJS, optionally PIC_OBJS)
-include make/compile.make
+include $(MAKEDIR)/compile.make
 
 ifneq ($(HAVE_PIC),)
  # obj/[config-]pic
  EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic
  EM_SUFFIX:=.pic
  EM_OBJS:=$(PIC_OBJS)
- include make/lib-common.make
+ include $(MAKEDIR)/lib-common.make
  EM_SUFFIX:=
  PIC_LIB:=$(LIB)
 endif
@@ -28,7 +28,7 @@ endif
 # obj[/config]
 EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
 EM_OBJS:=$(OBJS)
-include make/lib-common.make
+include $(MAKEDIR)/lib-common.make
 
 ifneq ($(TARGET),)
  .PHONY:$(TARGET) install-$(TARGET)-dev internal-install-$(TARGET)-dev

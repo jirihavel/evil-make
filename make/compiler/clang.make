@@ -1,5 +1,5 @@
 # vim: set ft=make:
-include make/compiler/gnu.make
+include $(MAKEDIR)/compiler/gnu.make
 
 CPP:=clang
 CC :=clang
