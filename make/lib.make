@@ -31,15 +31,11 @@ EM_OBJS:=$(OBJS)
 include $(MAKEDIR)/lib-common.make
 
 ifneq ($(TARGET),)
- .PHONY:$(TARGET) install-$(TARGET)-dev internal-install-$(TARGET)-dev
-
+ .PHONY:$(TARGET) em-install-$(TARGET)-dev install-$(TARGET)-dev
  $(TARGET):$(LIB)
-
- internal-install-$(TARGET)-dev:$(LIB)
+ em-install-$(TARGET)-dev:$(LIB)
 	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
-
- install-$(TARGET)-dev:internal-install-$(TARGET)-dev
-
+ install-$(TARGET)-dev:em-install-$(TARGET)-dev
  TARGET:=
 endif
 # end

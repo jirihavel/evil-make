@@ -13,7 +13,7 @@
 # OBJS
 # BIN
 
-# compile (sets OBJS)
+# compile (sets OBJS and EM_OBJPATH)
 include $(MAKEDIR)/compile.make
 
 OBJS+=$(ADD_OBJS)
@@ -24,25 +24,20 @@ BIN:=$(BINDIR)/$(NAME)$(SUFFIX)$(BINEXT)
 # append pkg-config --libs
 $(BIN):EM_LINK:=$(OBJS) $(LIBS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
 
-EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd 
-
 # objects + libs from previous linking
 # *.link will change only when different from before
+EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd 
 $(EM_CMD):always $$(@D)/.f
 	$(call updateIfNotEqual,$(Link.bin) $(EM_LINK))
 
 include $(MAKEDIR)/compiler/$(COMPILER_KIND)/bin.make 
 
 ifneq ($(TARGET),)
- .PHONY:$(TARGET) install-$(TARGET) internal-install-$(TARGET)
-
+ .PHONY:$(TARGET) em-install-$(TARGET) install-$(TARGET)
  $(TARGET):$(BIN)
-
- internal-install-$(TARGET):$(BIN)
+ em-install-$(TARGET):$(BIN)
 	$(INSTALL_PROGRAM) $< $(DESTDIR)$(bindir)
-
- install-$(TARGET):internal-install-$(TARGET)
-
+ install-$(TARGET):em-install-$(TARGET)
  TARGET:=
 endif
 # end
