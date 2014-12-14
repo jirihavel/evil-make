@@ -112,7 +112,6 @@ BINDIR:=$(if $(builddir),$(builddir)/)bin
 
 #rule runs every time, when depends on always
 .PHONY:always
-
 always:
 
 ##################################################
@@ -200,19 +199,24 @@ TARGET:=
 ADD_OBJS:=
 
 ##################################################
-# Create default config file
+# Support rules
 ##################################################
 
-CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
-CFG_SED+=-e's/@COMPILER@/$(COMPILER)/g'
-CFG_SED+=-e's/@ENVIRONMENT@/$(ENVIRONMENT)/g'
-CFG_SED+=-e's/@HARDWARE@/$(HARDWARE)/g'
+.PHONY:config init
 
-.PHONY:config
+EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
+EM_CFG_SED+=-e's/@COMPILER@/$(COMPILER)/g'
+EM_CFG_SED+=-e's/@ENVIRONMENT@/$(ENVIRONMENT)/g'
+EM_CFG_SED+=-e's/@HARDWARE@/$(HARDWARE)/g'
+
+# create default config.make
 config:
-	@sed $(CFG_SED) make/config.make.in > config.make
+	@echo "Creating default config.make"
+	@sed $(EM_CFG_SED) $(MAKEDIR)/config.make.in > config.make
 
+# initialize directory for building out of source
 init:
-	echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
-	echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
+	@echo "Creating proxy Makefile"
+	@echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
+	@echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
 #end
