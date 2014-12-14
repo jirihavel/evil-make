@@ -1,0 +1,18 @@
+# vim: set ft=make:
+##################################################
+# Basic facets
+##################################################
+
+# windows, cygwin, linux, osx
+SYSTEM:=@SYSTEM@
+
+# only gcc now
+COMPILER:=@COMPILER@
+
+ENVIRONMENT:=@ENVIRONMENT@
+
+HARDWARE:=@HARDWARE@
+
+# Verbose compilation
+#VERBOSE:=1
+

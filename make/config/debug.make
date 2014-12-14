@@ -1,0 +1,2 @@
+CONFIG_SUFFIX:=-d
+CONFIG_FLAGS+=-ggdb3 -O0
