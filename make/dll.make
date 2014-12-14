@@ -15,7 +15,14 @@
 # LIB - for linking, depends on $(DLL)
 # PKG - pkg-config file (TODO)
 
-include make/compiler/$(COMPILER_KIND)/dll.make
+# compile (sets OBJS + PIC_OBJ)
+include $(MAKEDIR)/compile.make
 
-$(DLL):CompilerFlags+=DLL_FLAGS
+# use PIC objects if system has them
+ifneq ($(HAVE_PIC),)
+ OBJS:=$(PIC_OBJS)
+endif
+OBJS+=$(ADD_OBJS)
+
+include $(MAKEDIR)/compiler/$(COMPILER_KIND)/dll.make
 # end

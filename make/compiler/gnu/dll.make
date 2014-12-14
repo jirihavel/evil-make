@@ -26,15 +26,6 @@ else
 endif
 PKG:=$(LIBDIR)/pkgconfig/$(NAME)$(SUFFIX).pc
 
-# compile (sets OBJS)
-INT_FLAGS_DLL_BACKUP:=$(FLAGS)
-FLAGS+=$(DLL_FLAGS)
-include make/compile.make
-FLAGS:=$(INT_FLAGS_DLL_BACKUP)
-INT_FLAGS_DLL_BACKUP:=
-
-OBJS+=$(ADD_OBJS)
-
 INT_SED_FILE:=$(OBJDIR)/$(NAME)$(SUFFIX).sed
 $(INT_SED_FILE):always $$(@D)/.f
 	echo "s/PREFIX/$(PREFIX)" > $@
@@ -109,28 +100,10 @@ ifneq ($(TARGET),)
  $(TARGET)-dev:$(LIB)
  $(TARGET)-pkg:$(PKG)
 
- install-$(TARGET):internal-install-$(TARGET)
- install-$(TARGET)-dev:install-$(TARGET) internal-install-$(TARGET)-dev
+ include $(MAKEDIR)/system/$(SYSTEM_KIND)/install-dll.make
 
- ifeq ($(SYSTEM_KIND), windows)
-  # just copy dll
-  internal-install-$(TARGET):$(DLL)
-	$(INSTALL_DATA) $< $(DESTDIR)$(dlldir)
-  # copy import library for developers
-  internal-install-$(TARGET)-dev:$(LIB)
-	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
- else
-  internal-install-$(TARGET) internal-install-$(TARGET)-dev:MINOR:=$(MINOR_VERSION)
-  internal-install-$(TARGET) internal-install-$(TARGET)-dev:SONAME:=$(DLLPREFIX)$(NAME)$(SUFFIX)$(DLLEXT).$(MAJOR_VERSION)
-  # copy library with versioned name
-  internal-install-$(TARGET):$(DLL)
-	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
-	ln -sf $(SONAME).$(MINOR) $(DESTDIR)$(libdir)/$(SONAME)
-  # make dev symlink
-  internal-install-$(TARGET)-dev:BASENAME:=$(DLLPREFIX)$(NAME)$(SUFFIX)$(DLLEXT)
-  internal-install-$(TARGET)-dev:
-	ln -sf $(SONAME).$(MINOR) $(DESTDIR)$(libdir)/$(BASENAME)
- endif
+ install-$(TARGET):em-install-$(TARGET)
+ install-$(TARGET)-dev:install-$(TARGET) em-install-$(TARGET)-dev
 
  install-$(TARGET)-pkg:TGT:=$(TARGET)
  install-$(TARGET)-pkg:TGT_FLAGS:=-DPREFIX=$(prefix) -DVERSION=$(MAJOR_VERSION).$(MINOR_VERSION).0
