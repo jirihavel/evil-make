@@ -12,6 +12,7 @@ ifndef DLLDIR
  DLLDIR:=$(LIBDIR)
 endif 
 
+TOUCH:=touch
 MKDIR:=mkdir -p
 COPY:=cp
 INSTALL:=install
