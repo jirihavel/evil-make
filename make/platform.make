@@ -204,10 +204,17 @@ ADD_OBJS:=
 
 .PHONY:config init
 
+# basic facets
 EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
-EM_CFG_SED+=-e's/@COMPILER@/$(COMPILER)/g'
-EM_CFG_SED+=-e's/@ENVIRONMENT@/$(ENVIRONMENT)/g'
-EM_CFG_SED+=-e's/@HARDWARE@/$(HARDWARE)/g'
+ifneq ($(COMPILER),gcc)
+ EM_CFG_SED+=-e's/#COMPILER=@COMPILER@/COMPILER=$(COMPILER)/g'
+endif
+ifneq ($(ENVIRONMENT),default)
+ EM_CFG_SED+=-e's/#ENVIRONMENT=@ENVIRONMENT@/ENVIRONMENT=$(ENVIRONMENT)/g'
+endif
+ifneq ($(HARDWARE),generic)
+ EM_CFG_SED+=-e's/#HARDWARE=@HARDWARE@/HARDWARE=$(HARDWARE)/g'
+endif
 
 # create default config.make
 config:

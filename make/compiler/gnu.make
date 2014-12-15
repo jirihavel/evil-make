@@ -7,6 +7,10 @@ OBJEXT:=.o
 LIBEXT:=.a
 DBGEXT:=.dbg
 
+# TODO : if HAVE_PIC && PIC -> -fpic
+# else if HAVE_PIE && PIE -> -fpie
+# else nothing
+
 EM_CompileFlags=-o $@ -c -MMD -MP $(if $(PIE),-fpie) $(if $(PIC),-fpic) $(CompileFlags)
 
 Compile.c=$(CC) $(EM_CompileFlags) $(CompileFlags.c) $(CPPFLAGS) $(CFLAGS)
