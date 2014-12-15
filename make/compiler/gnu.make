@@ -18,12 +18,18 @@ Compile.cpp=$(CXX) $(EM_CompileFlags) $(CompileFlags.cpp) $(CPPFLAGS) $(CXXFLAGS
 Compile.cc=$(Compile.cpp)
 Compile.C=$(Compile.cpp)
 
-EM_LinkFlags=-o $@ -Wl,-Map=$@.map $(LinkFlags)
+EM_GNU_MAP=-Wl,-Map=$(MAP)
+
+EM_LinkFlags=-o $@ $(if $(MAP),$(EM_GNU_MAP) )$(LinkFlags)
 
 EM_Linker=$(CXX)
 
+EM_GNU_SONAME=-Wl,-soname=$(SONAME)
+EM_GNU_IMPLIB=-Wl,--out-implib=$(IMPLIB)
+EM_GNU_DEF=-Wl,--output-def=$(DEF)
+
 Link.lib=$(AR) -rcs $@
-Link.dll=$(EM_Linker) -shared $(EM_LinkFlags) $(LinkFlags.dll) $(LDFLAGS) $(LDLIBS)
+Link.dll=$(EM_Linker) -shared $(EM_LinkFlags) $(if $(SONAME),$(EM_GNU_SONAME) )$(if $(IMPLIB),$(EM_GNU_IMPLIB) )$(if $(DEF),$(EM_GNU_DEF) )$(LinkFlags.dll) $(LDFLAGS) $(LDLIBS)
 Link.bin=$(EM_Linker) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
 
 updateIfNotEqual=@echo '$1' | cmp -s - $@ || echo '$1' > $@

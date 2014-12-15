@@ -13,12 +13,17 @@
 # OBJS
 # BIN
 
+BIN:=$(BINDIR)/$(NAME)$(SUFFIX)$(BINEXT)
+
+# MAP is created with BIN
+MAP:=$(BIN).map
+$(BIN):MAP:=$(MAP)
+$(MAP):$(BIN)
+
 # compile (sets OBJS and EM_OBJPATH)
 include $(MAKEDIR)/compile.make
 
 OBJS+=$(ADD_OBJS)
-
-BIN:=$(BINDIR)/$(NAME)$(SUFFIX)$(BINEXT)
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs

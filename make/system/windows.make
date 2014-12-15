@@ -12,6 +12,7 @@ endif
 ifndef DLLDIR
  DLLDIR:=$(BINDIR)
 endif
+DEFEXT:=.def
 
 # TODO : use different stuff than unixutils
 TOUCH:=touch
@@ -31,9 +32,6 @@ INSTALL_DATA:=$(INSTALL)
 #	$(MKDIR) $(dir $@)
 #	touch $@
 #	attrib +H $@
-
-# hack, TODO : correct dll.make, so it creates both directories
-$(DLLDIR)/.f : | $(LIBDIR)/.f
 
 # PIC is not used on windows
 HAVE_PIC:=
