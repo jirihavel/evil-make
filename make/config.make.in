@@ -1,4 +1,8 @@
 # vim: set ft=make:
+
+# Verbose mode
+#VERBOSE:=1
+
 ##################################################
 # Basic facets
 ##################################################
@@ -12,7 +16,3 @@ COMPILER:=@COMPILER@
 ENVIRONMENT:=@ENVIRONMENT@
 
 HARDWARE:=@HARDWARE@
-
-# Verbose compilation
-#VERBOSE:=1
-
