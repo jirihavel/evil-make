@@ -204,7 +204,7 @@ ADD_OBJS:=
 ##################################################
 
 %/.f:
-	@echo "Creating dir $(@D)"
+	@echo "Creating $(@D)/"
 	@$(MKDIR) $(@D)
 	@$(TOUCH) $@
 
