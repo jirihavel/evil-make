@@ -20,7 +20,7 @@ ifneq ($(HAVE_PIC),)
  EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic
  EM_SUFFIX:=.pic
  EM_OBJS:=$(PIC_OBJS)
- include $(MAKEDIR)/lib-common.make
+ include $(MAKEDIR)/common/lib.make
  EM_SUFFIX:=
  PIC_LIB:=$(LIB)
 endif
@@ -28,14 +28,21 @@ endif
 # obj[/config]
 EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
 EM_OBJS:=$(OBJS)
-include $(MAKEDIR)/lib-common.make
+include $(MAKEDIR)/common/lib.make
 
 ifneq ($(TARGET),)
  .PHONY:$(TARGET) em-install-$(TARGET)-dev install-$(TARGET)-dev
+
  $(TARGET):$(LIB)
  em-install-$(TARGET)-dev:$(LIB)
 	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
  install-$(TARGET)-dev:em-install-$(TARGET)-dev
- TARGET:=
+
+ ifneq ($(HAVE_PIC),)
+  .PHONY:$(TARGET)-pic
+  $(TARGET)-pic:$(PIC_LIB)
+ endif
+
+TARGET:=
 endif
 # end
