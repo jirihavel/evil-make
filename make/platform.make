@@ -3,6 +3,7 @@
 # Behavior config
 ##################################################
 
+#load config.make if present
 -include config.make
 
 #VERBOSE - if empty, commands are not printed
@@ -126,9 +127,9 @@ always:
 .SECONDEXPANSION:
 
 #implicit rule to create directory and marker file
+# add $$(@D)/.f as rule dependency
 #%/.f: (system)
 
-# add $$(@D)/.f as rule dependency
 
 ##################################################
 # Common flags
@@ -197,6 +198,15 @@ include $(MAKEDIR)/hardware/$(HARDWARE).make
 # to get rid of warnings
 TARGET:=
 ADD_OBJS:=
+
+##################################################
+# Directory construction
+##################################################
+
+%/.f:
+	@echo "Creating dir $(@D)"
+	@$(MKDIR) $(@D)
+	@$(TOUCH) $@
 
 ##################################################
 # Support rules
