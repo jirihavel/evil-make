@@ -1,4 +1,7 @@
 # vim: set ft=make:
+# Creates rules for static library.
+# On platforms with PIC also creates rules for PIC version.
+# On platforms without PIC, PIC_LIB equals LIB
 #input :
 # SRCDIR, OBJDIR, LIBDIR
 # DEPEXT, OBJEXT, LIBEXT
@@ -9,10 +12,11 @@
 # PKGS
 # FLAGS
 #outputs :
-# OBJS
-# LIB
+# OBJS + PIC_OBJS
+# DEPS + PIC_DEPS - from compilation
+# LIB  + PIC_LIB
 
-# compile (sets OBJS, optionally PIC_OBJS)
+# compile (sets OBJS, PIC_OBJS, DEPS, PIC_DEPS)
 include $(MAKEDIR)/compile.make
 
 ifneq ($(HAVE_PIC),)
@@ -20,7 +24,7 @@ ifneq ($(HAVE_PIC),)
  EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic
  EM_SUFFIX:=.pic
  EM_OBJS:=$(PIC_OBJS)
- include $(MAKEDIR)/lib-common.make
+ include $(MAKEDIR)/common/lib.make
  EM_SUFFIX:=
  PIC_LIB:=$(LIB)
 endif
@@ -28,14 +32,28 @@ endif
 # obj[/config]
 EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
 EM_OBJS:=$(OBJS)
-include $(MAKEDIR)/lib-common.make
+include $(MAKEDIR)/common/lib.make
+
+# on platforms without PIC, use nonpic version
+ifeq ($(HAVE_PIC),)
+ PIC_LIB:=$(LIB)
+endif
 
 ifneq ($(TARGET),)
- .PHONY:$(TARGET) em-install-$(TARGET)-dev install-$(TARGET)-dev
+ # build rules
+ .PHONY:$(TARGET) $(TARGET)-pic
  $(TARGET):$(LIB)
+ $(TARGET)-pic:$(PIC_LIB)
+
+ # internal install-dev implementation
+ .PHONY:em-install-$(TARGET)-dev
  em-install-$(TARGET)-dev:$(LIB)
 	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
+
+ # hook internal install to install rule
+ .PHONY:install-$(TARGET)-dev
  install-$(TARGET)-dev:em-install-$(TARGET)-dev
+
  TARGET:=
 endif
 # end
