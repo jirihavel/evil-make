@@ -1,50 +1,84 @@
-.PHONY:all
-all:cmain cppmain
-
+##################################################
+# Initialize the build platform
+##################################################
+# - config.make may overwrite anything set before
 include $(if $(srcdir),$(srcdir)/)make/platform.make
+# now we can use "include $(MAKEDIR)/..."
+
+# We want default targets for all libraries and executables
+# executables : installdirs-name, install-name
+# TODO : implement for libraries
+WANT_TARGET:=1
+
+# We want linker MAP files
+WANT_MAP:=1
+
+# We want DEF files for DLLs on Windows
+WANT_DEF:=1
+#TODO
+
+# Set some global flags
+# - can be overwritten per target, but the propagation depends on the initial rule so it is not reliable
+CFLAGS:=-std=c99
+CXXFLAGS:=-std=c++11
+
+# Project configurations can be differenciated using
+# CONFIG - long configuration name
+# - /obj/<config>/foo.c.o
+# SUFFIX - short configuration suffix
+# - foo<suffix>.exe, libfoo<suffix>.a, ...
+# This allows to switch between configuration without complete recompilation
+
+##################################################
+# Project pieces
+##################################################
+# All configuration variables here are expected to
+#  be nonrecursive and can be safely overwritten further in the makefile
+# NAME uniquely identifies a piece of the project
+# - will be used to construct filenames and makefile rules
+# SRCS is the list of source files
+# - will be compiled into object files according to their extensions
+# FLAGS, LIBS are parameters for compiler and linker
+# - flags are currently common for all source types
+# DEPS are names of previous pieces that are dependencies of this one
+# - circular dependencies are not allowed
 
 # build all src/foo/*.c as a static library
+# libfoo.a
 NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
 include $(MAKEDIR)/lib.make
-# TODO : figure something better
-LIBFOO:=$(LIB)
-PIC_LIBFOO:=$(PIC_LIB)
 
 # build all src/bar/*.c as a dynamic library
+# lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a
 NAME:=bar
+# libbar needs target for install rule
 TARGET:=libbar
+# libbar depends on libfoo (PIC version)
+DEPS:=foo.pic
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
 include $(MAKEDIR)/dll.make
-# libbar depends on libfoo (PIC version)
-$(DLL):LDLIBS:=$(PIC_LIBFOO)
-$(DLL):$(PIC_LIBFOO)
-LIBBAR:=$(LIB)
 
-# C executable with target cmain
-NAME:=cmain
-TARGET:=cmain
+# C executable with target main
+# bin/main, bin/main.exe
+NAME:=main
+# main depends on libfoo (normal lib)
+DEPS:=foo.lib
 SRCS:=$(SRCDIR)/main.c
 include $(MAKEDIR)/bin.make
-# CFLAGS propagate to libfoo
-$(BIN):CFLAGS:=-std=c99
-# cmain depends on libfoo (no PIC)
-$(BIN):LDLIBS+=$(LIBFOO)
-$(BIN):$(LIBFOO)
 
-# C++ executable with target cppmain
-NAME:=cppmain
-TARGET:=cppmain
+# C++ executable with target mainpp
+NAME:=mainpp
+# cppmain depends on libbar
+DEPS:=bar.dll
 SRCS:=$(SRCDIR)/main.cpp
 include $(MAKEDIR)/bin.make
-# CXXFLAGS propagate to libbar but have no effect
-$(BIN):CXXFLAGS:=-std=c++11
-# cppmain depends on libbar
-$(BIN):LDLIBS:=$(LIBBAR)
-$(BIN):$(LIBBAR)
 
-# install rules
+##################################################
+# Basic rules
+##################################################
+# - all, installdirs, install
 
-install:install-cmain install-cppmain
-
-install-cppmain:install-libbar
+DEPS:=main mainpp
+# all, installdirs and install for DEPS
+include $(MAKEDIR)/rules.make

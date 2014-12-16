@@ -18,20 +18,15 @@ DEFEXT:=.def
 TOUCH:=touch
 MKDIR:=mkdir -p
 COPY:=cp
-INSTALL:=install
+INSTALL:=cp
+INSTALL_PROGRAM:=$(INSTALL)
+INSTALL_DATA:=$(INSTALL)
 
+# TODO : uses unixutils, find standard alternative
 #MKDIR:=$(srcdir:/=\\)\make\system\windows\mkdir.bat
 #RMDIR:=rmdir /s /q
 #COPY:=$(srcdir:/=\\)\make\system\windows\copy.bat
 #INSTALL:=$(srcdir)\make\system\windows\copy.bat
-INSTALL_PROGRAM:=$(INSTALL)
-INSTALL_DATA:=$(INSTALL)
-
-# TODO : uses touch from unixutils, find standard alternative
-#%/.f :
-#	$(MKDIR) $(dir $@)
-#	touch $@
-#	attrib +H $@
 
 # PIC is not used on windows
 HAVE_PIC:=

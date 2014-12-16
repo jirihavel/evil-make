@@ -13,10 +13,9 @@
 # FLAGS
 #outputs :
 # OBJS + PIC_OBJS
-# DEPS + PIC_DEPS - from compilation
 # LIB  + PIC_LIB
 
-# compile (sets OBJS, PIC_OBJS, DEPS, PIC_DEPS)
+# compile (sets OBJS, PIC_OBJS)
 include $(MAKEDIR)/compile.make
 
 ifneq ($(HAVE_PIC),)
@@ -39,11 +38,14 @@ ifeq ($(HAVE_PIC),)
  PIC_LIB:=$(LIB)
 endif
 
+# register libraries for DEPS
+Libraries.$(NAME).lib:=$(LIB)
+Libraries.$(NAME).pic:=$(PIC_LIB)
+
 ifneq ($(TARGET),)
  # build rules
- .PHONY:$(TARGET) $(TARGET)-pic
- $(TARGET):$(LIB)
- $(TARGET)-pic:$(PIC_LIB)
+ .PHONY:$(TARGET)
+ $(TARGET):$(LIB) $(PIC_LIB)
 
  # internal install-dev implementation
  .PHONY:em-install-$(TARGET)-dev

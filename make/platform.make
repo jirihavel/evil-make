@@ -1,4 +1,9 @@
 # vim: set ft=make:
+
+# first rule is default
+all:
+.PHONY:all installdirs install
+
 ##################################################
 # Behavior config
 ##################################################
@@ -202,6 +207,18 @@ ADD_OBJS:=
 ##################################################
 # Directory construction
 ##################################################
+
+em-installdirs-bindir:
+	$(MKDIR) $(DESTDIR)$(bindir)
+
+em-installdirs-dlldir:
+	$(MKDIR) $(DESTDIR)$(dlldir)
+
+em-installdirs-libdir:
+	$(MKDIR) $(DESTDIR)$(libdir)
+
+em-installdirs-includedir:
+	$(MKDIR) $(DESTDIR)$(includedir)
 
 %/.f:
 	@echo "Creating $(@D)/"

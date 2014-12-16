@@ -10,7 +10,6 @@
 # FLAGS
 #output:
 # OBJS + PIC_OBJS
-# DEPS + PIC_DEPS
 
 ifneq ($(HAVE_PIC),)
  # obj/[config-]pic
@@ -18,7 +17,6 @@ ifneq ($(HAVE_PIC),)
  include $(MAKEDIR)/common/compile.make
  $(OBJS):PIC:=1
  PIC_OBJS:=$(OBJS)
- PIC_DEPS:=$(DEPS)
 endif
 
 # obj[/config]
@@ -28,6 +26,5 @@ include $(MAKEDIR)/common/compile.make
 # On platforms without PIC, use nonpic for both
 ifeq ($(HAVE_PIC),)
  PIC_OBJS:=$(OBJS)
- PIC_DEPS:=$(DEPS)
 endif
 # end

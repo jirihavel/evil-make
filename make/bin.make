@@ -3,7 +3,6 @@
 # SRCDIR, OBJDIR, BINDIR
 # DEPEXT, OBJEXT, BINEXT
 # NAME
-# ?TARGET
 # SRCS
 # PKGS
 # FLAGS
@@ -13,21 +12,30 @@
 # OBJS
 # BIN
 
+# Full name of the executable
 BIN:=$(BINDIR)/$(NAME)$(SUFFIX)$(BINEXT)
 
-# MAP is created with BIN
-MAP:=$(BIN).map
-$(BIN):MAP:=$(MAP)
-$(MAP):$(BIN)
+# Linker MAP file can be created during linking
+ifneq ($(WANT_MAP),)
+ MAP:=$(BIN).map
+ $(BIN):MAP:=$(MAP)
+ $(MAP):$(BIN)
+endif
+
+##################################################
+# Compilation
+##################################################
 
 # compile (sets OBJS and EM_OBJPATH)
 include $(MAKEDIR)/compile.make
 
 OBJS+=$(ADD_OBJS)
 
+EM_DEPS:=$(foreach d,$(DEPS),$(Libraries.$d))
+
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
+$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
 
 # objects + libs from previous linking
 # *.link will change only when different from before
@@ -35,14 +43,41 @@ EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd
 $(EM_CMD):always $$(@D)/.f
 	$(call updateIfNotEqual,$(Link.bin) $(EM_LINK))
 
-include $(MAKEDIR)/compiler/$(COMPILER_KIND)/bin.make 
+$(BIN):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
+	$(if $(VERBOSE),,@echo "Linking $@")
+	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK)
+	@objcopy --only-keep-debug $@ $@.debug
+	@strip -g $@
+	@objcopy --add-gnu-debuglink=$@.debug $@
 
-ifneq ($(TARGET),)
- .PHONY:$(TARGET) em-install-$(TARGET) install-$(TARGET)
- $(TARGET):$(BIN)
- em-install-$(TARGET):$(BIN)
+# register the executable name
+Dependencies.$(NAME):=$(BIN)
+
+##################################################
+# Installation
+##################################################
+
+em-installdirs-$(NAME):em-installdirs-bindir
+em-installdirs-$(NAME):$(foreach d,$(DEPS),$(Dependencies.installdirs.$d))
+.PHONY:em-installdirs-$(NAME)
+
+# internal rule that does the instalation
+em-install-$(NAME):$(BIN) $(foreach d,$(DEPS),$(Dependencies.install.$d))
 	$(INSTALL_PROGRAM) $< $(DESTDIR)$(bindir)
- install-$(TARGET):em-install-$(TARGET)
- TARGET:=
+.PHONY:em-install-$(NAME)
+
+# register install rule for DEPS
+Dependencies.installdirs.$(NAME):=em-installdirs-$(NAME)
+Dependencies.install.$(NAME):=em-install-$(NAME)
+
+ifneq ($(WANT_TARGET),)
+ $(NAME):$(BIN)
+ .PHONY:$(NAME)
+
+ installdirs-$(NAME):em-installdirs-$(NAME)
+ .PHONY:installdirs-$(NAME)
+
+ install-$(NAME):em-install-$(NAME)
+ .PHONY:install-$(NAME)
 endif
 # end

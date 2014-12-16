@@ -2,8 +2,6 @@
 
 # src/a.c -> obj/a.c.o
 OBJS:=$(patsubst $(SRCDIR)/%,$(EM_OBJPATH)/%$(OBJEXT),$(SRCS))
-# obj/a.c.o -> obj/a.c.d
-DEPS:=$(patsubst %$(OBJEXT),%$(DEPEXT),$(OBJS))
 
 # rule specific variable beause of late expansion in commands
 # add pkg-config --cflags
@@ -25,5 +23,6 @@ else
 endif
 
 # include dependencies from previous compilations
--include $(DEPS)
+# obj/a.c.o -> obj/a.c.d
+-include $(patsubst %$(OBJEXT),%$(DEPEXT),$(OBJS))
 # end

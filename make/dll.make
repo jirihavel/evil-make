@@ -11,7 +11,6 @@
 # PKGS, FLAGS, LIBS
 #output :
 # OBJS = PIC_OBJS
-# DEPS = PIC_DEPS
 # DLL - for runtime
 # MAP
 # LIB - for linking, depends on $(DLL)
@@ -30,6 +29,10 @@ $(MAP):$(DLL)
 
 PKG:=$(LIBDIR)/pkgconfig/$(NAME)$(SUFFIX).pc
 
+##################################################
+# Compilation
+##################################################
+
 # compile (sets OBJS + PIC_OBJ)
 include $(MAKEDIR)/compile.make
 
@@ -40,31 +43,73 @@ OBJS:=$(PIC_OBJS)
 #  EM_OBJPATH is set by compile.make
 EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).dll.cmd
 
+EM_DEPS:=$(foreach d,$(DEPS),$(Libraries.$d))
+
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
+$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $$(@D)/.f
-	$(call updateIfNotEqual,$(Link.dll) $(EM_PAR) $(EM_LINK))
-
-#$(PKG):TGT_FLAGS:=-DPREFIX=. -DVERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
-#$(PKG):$(SRCDIR)/pkgconfig/lib$(NAME).pc.in $(LIB) $$(@D)/.f
-#	$(CPP) -P -o $@ -x c $< $(TGT_FLAGS)
+	$(call updateIfNotEqual,$(Link.dll) $(EM_LINK))
 
 # link
 ifeq ($(VERBOSE),)
-$(DLL):$(OBJS) $(EM_CMD) $$(@D)/.f
+$(DLL):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
 	@echo "Linking $@"
-	@$(Link.dll) $(EM_PAR) $(EM_LINK)
+	@$(Link.dll) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
 else
-$(DLL):$(OBJS) $(EM_CMD) $$(@D)/.f
-	$(Link.dll) $(EM_PAR) $(EM_LINK)
+$(DLL):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
+	$(Link.dll) $(EM_LINK)
 	objcopy --only-keep-debug $@ $@.debug
 	strip -g $@
 	objcopy --add-gnu-debuglink=$@.debug $@
 endif 
+
+# register library for DEPS
+Libraries.$(NAME).dll:=$(LIB)
+
+# register the library name
+#Dependencies.$(NAME):=$(DLL)
+
+##################################################
+# Installation
+##################################################
+
+em-installdirs-$(NAME):em-installdirs-dlldir
+em-installdirs-$(NAME):$(foreach d,$(DEPS),$(Dependencies.installdirs.$d))
+.PHONY:em-installdirs-$(NAME)
+
+# create internal rule that does the instalation
+include $(MAKEDIR)/system/$(SYSTEM_KIND)/dll-install.make
+
+# hook dependencies
+em-install-$(NAME):$(foreach d,$(DEPS),$(Dependencies.install.$d))
+
+# register install rule for DEPS
+Dependencies.installdirs.$(NAME).dll:=em-installdirs-$(NAME)
+Dependencies.install.$(NAME).dll:=em-install-$(NAME)
+
+# install
+ifneq ($(TARGET),)
+ $(TARGET):$(DLL)
+ .PHONY:$(TARGET)
+
+ installdirs-$(TARGET):em-installdirs-dlldir
+ .PHONY:installdirs-$(TARGET)
+
+ install-$(TARGET):em-install-$(NAME)
+ .PHONY:install-$(TARGET)
+
+# install-$(TARGET)-dev:install-$(TARGET) em-install-$(TARGET)-dev
+# install-$(TARGET)-pkg:TGT:=$(TARGET)
+# install-$(TARGET)-pkg:TGT_FLAGS:=-DPREFIX=$(prefix) -DVERSION=$(MAJOR_VERSION).$(MINOR_VERSION).0
+# install-$(TARGET)-pkg:
+#	$(CPP) -P -o $(DESTDIR)$(libdir)/pkgconfig/$(TGT).pc -x c $(SRCDIR)/pkgconfig/$(TGT).pc.in $(TGT_FLAGS)
+
+ TARGET:=
+endif
 # end
