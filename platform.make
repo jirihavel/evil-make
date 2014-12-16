@@ -90,7 +90,7 @@ endif
 # Source directories
 ##################################################
 
-MAKEDIR:=$(if $(srcdir),$(srcdir)/)make
+MAKEDIR:=$(if $(srcdir),$(srcdir)/)$(makedir)
 
 INCDIR:=$(if $(srcdir),$(srcdir)/)include
 SRCDIR:=$(if $(srcdir),$(srcdir)/)src
