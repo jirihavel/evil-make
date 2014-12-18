@@ -101,14 +101,14 @@ ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
 ##################################################
 
 # precompiled headers
-#PCHDIR:=$(if $(builddir),$(builddir)/)pch
+#TODO PCHDIR:=$(if $(builddir),$(builddir)/)pch
 # generated source files
-GENDIR:=$(if $(builddir),$(builddir)/)obj
+#TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
 # object files and other build stuff
 OBJDIR:=$(if $(builddir),$(builddir)/)obj
 
 LIBDIR:=$(if $(builddir),$(builddir)/)lib
-#DLLDIR:={LIBDIR, BINDIR} (system)
+#DLLDIR:={LIBDIR, BINDIR} (set by system)
 BINDIR:=$(if $(builddir),$(builddir)/)bin
 #DBGDIR:=$(if $(builddir),$(builddir)/)dbg
 
@@ -116,7 +116,7 @@ BINDIR:=$(if $(builddir),$(builddir)/)bin
 # Rule parts
 ##################################################
 
-#rule runs every time, when depends on always
+# Rule runs every time, when depends on always
 .PHONY:always
 always:
 
@@ -124,17 +124,34 @@ always:
 # Directory construction
 ##################################################
 
-#Directories are marked by hidden .f file inside
+# Directories are marked by hidden .f file inside
 
-#do not delete directory marker files
+# Do not delete directory marker files
 .PRECIOUS:%/.f
-#enable secondary expansions
+# Enable secondary expansions (for $$(@D)/.f)
 .SECONDEXPANSION:
 
-#implicit rule to create directory and marker file
+#implicit rule to create directory and its marker file
 # add $$(@D)/.f as rule dependency
-#%/.f: (system)
+# MKDIR and TOUCH will be set by system
+%/.f:
+	@echo "Creating $(@D)/"
+	@$(MKDIR) $(@D)
+	@$(TOUCH) $@
 
+# Directory construction for installdirs
+em-installdirs-bindir:
+	$(MKDIR) $(DESTDIR)$(bindir)
+.PHONY:em-installdirs-bindir
+# System will hook proper dependency for dlldir
+em-installdirs-dlldir:
+.PHONY:em-installdirs-dlldir
+em-installdirs-libdir:
+	$(MKDIR) $(DESTDIR)$(libdir)
+.PHONY:em-installdirs-libdir
+em-installdirs-includedir:
+	$(MKDIR) $(DESTDIR)$(includedir)
+.PHONY:em-installdirs-includedir
 
 ##################################################
 # Common flags
@@ -203,27 +220,6 @@ include $(MAKEDIR)/hardware/$(HARDWARE).make
 # to get rid of warnings
 TARGET:=
 ADD_OBJS:=
-
-##################################################
-# Directory construction
-##################################################
-
-em-installdirs-bindir:
-	$(MKDIR) $(DESTDIR)$(bindir)
-
-em-installdirs-dlldir:
-	$(MKDIR) $(DESTDIR)$(dlldir)
-
-em-installdirs-libdir:
-	$(MKDIR) $(DESTDIR)$(libdir)
-
-em-installdirs-includedir:
-	$(MKDIR) $(DESTDIR)$(includedir)
-
-%/.f:
-	@echo "Creating $(@D)/"
-	@$(MKDIR) $(@D)
-	@$(TOUCH) $@
 
 ##################################################
 # Support rules

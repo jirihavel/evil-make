@@ -7,6 +7,7 @@ BINEXT:=
 DLLPREFIX:=lib
 ifndef dlldir
  dlldir:=$(libdir)
+ em-installdirs-dlldir:em-installdirs-libdir
 endif
 ifndef DLLDIR
  DLLDIR:=$(LIBDIR)
