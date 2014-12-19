@@ -1,6 +1,4 @@
-LIB:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(EM_SUFFIX)$(LIBEXT)
-
-$(LIB):EM_OBJS:=$(EM_OBJS)
+# vim: set ft=make:
 
 # *.cmd will change only when different from before
 EM_CMD:=$(EM_OBJPATH)/lib$(NAME)$(SUFFIX).lib.cmd

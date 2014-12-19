@@ -8,6 +8,7 @@ DLLEXT:=.dll
 DLLPREFIX:=
 ifndef dlldir
  dlldir:=$(bindir)
+ em-installdirs-dlldir:em-installdirs-bindir
 endif
 ifndef DLLDIR
  DLLDIR:=$(BINDIR)

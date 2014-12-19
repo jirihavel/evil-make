@@ -10,7 +10,8 @@
 # LIBS
 #output :
 # OBJS
-# BIN
+# BIN - executable name
+# MAP - linker map
 
 # Full name of the executable
 BIN:=$(BINDIR)/$(NAME)$(SUFFIX)$(BINEXT)
@@ -44,11 +45,14 @@ $(EM_CMD):always $$(@D)/.f
 	$(call updateIfNotEqual,$(Link.bin) $(EM_LINK))
 
 $(BIN):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
-	$(if $(VERBOSE),,@echo "Linking $@")
+	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
+
+# hook all dependencies to the executable
+$(BIN):$(foreach d,$(DEPS),$(Dependencies.$d))
 
 # register the executable name
 Dependencies.$(NAME):=$(BIN)
