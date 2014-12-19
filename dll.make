@@ -18,8 +18,9 @@
 # DEF - on windows platform
 # SONAME - on unix platform
 
-# generate DLL, MAP, LIB, PKG, DEF, SONAME
+# generate DLL, LIB, DEF, SONAME
 # + rules to make them from $(DLL)
+# - all depend on DLL
 include $(MAKEDIR)/system/$(SYSTEM_KIND)/dll-names.make
 
 # MAP is created with DLL
@@ -28,6 +29,9 @@ $(DLL):MAP:=$(MAP)
 $(MAP):$(DLL)
 
 PKG:=$(LIBDIR)/pkgconfig/$(NAME)$(SUFFIX).pc
+# generate PKG
+include $(MAKEDIR)/pkg.make
+$(PKG):$(LIB)
 
 ##################################################
 # Compilation
@@ -47,7 +51,7 @@ EM_DEPS:=$(foreach d,$(DEPS),$(Libraries.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell pkg-config $(PKGS) --libs))
+$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $$(@D)/.f

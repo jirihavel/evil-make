@@ -27,6 +27,10 @@ INSTALL_DATA:=$(INSTALL)
 #RMDIR:=rmdir /s /q
 #COPY:=$(srcdir:/=\\)\make\system\windows\copy.bat
 #INSTALL:=$(srcdir)\make\system\windows\copy.bat
+INSTALL_PROGRAM:=$(INSTALL)
+INSTALL_DATA:=$(INSTALL)
+
+PKG_CONFIG:=pkg-config
 
 # PIC is not used on windows
 HAVE_PIC:=

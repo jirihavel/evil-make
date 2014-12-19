@@ -5,7 +5,7 @@ OBJS:=$(patsubst $(SRCDIR)/%,$(EM_OBJPATH)/%$(OBJEXT),$(SRCS))
 
 # rule specific variable beause of late expansion in commands
 # add pkg-config --cflags
-$(OBJS):EM_FLAGS:=$(FLAGS) $(if $(PKGS),$(shell pkg-config $(PKGS) --cflags))
+$(OBJS):EM_FLAGS:=$(FLAGS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --cflags))
 
 # flags from previous compilations
 # file will change only when flags change
