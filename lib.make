@@ -26,8 +26,8 @@ include $(MAKEDIR)/compile.make
 ifneq ($(HAVE_PIC),)
  # obj/[config-]pic
  EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic
+ EM_OBJS:=$(PIC_OBJS)
  LIB:=$(LIBDIR)/lib$(NAME)$(SUFFIX).pic$(LIBEXT)
- $(LIB):EM_OBJS:=$(PIC_OBJS)
  include $(MAKEDIR)/common/lib.make
  PIC_LIB:=$(LIB)
 endif
@@ -35,8 +35,8 @@ endif
 # link default version <libdir>/lib<name>[-<suffix>].pic.a
 # obj[/config]
 EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
+EM_OBJS:=$(OBJS)
 LIB:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(LIBEXT)
-$(LIB):EM_OBJS:=$(OBJS)
 include $(MAKEDIR)/common/lib.make
 
 # on platforms without PIC, use nonpic version

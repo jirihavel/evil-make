@@ -28,17 +28,14 @@ EM_GNU_SONAME=-Wl,-soname=$(SONAME)
 EM_GNU_IMPLIB=-Wl,--out-implib=$(IMPLIB)
 EM_GNU_DEF=-Wl,--output-def=$(DEF)
 
+Link.c.bin=$(CC) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+Link.cpp.bin=$(CXX) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+
 Link.lib=$(AR) -rcs $@
 Link.dll=$(EM_Linker) -shared $(EM_LinkFlags) $(if $(SONAME),$(EM_GNU_SONAME) )$(if $(IMPLIB),$(EM_GNU_IMPLIB) )$(if $(DEF),$(EM_GNU_DEF) )$(LinkFlags.dll) $(LDFLAGS) $(LDLIBS)
 Link.bin=$(EM_Linker) $(EM_LinkFlags) $(LinkFlags.bin) $(LDFLAGS) $(LDLIBS)
 
 updateIfNotEqual=@echo '$1' | cmp -s - $@ || echo '$1' > $@
-
-$(OBJDIR)/compile%.cmd: always $$(@D)/.f
-	$(call updateIfNotEqual,$(Compile$*))
-
-$(OBJDIR)/link%.cmd: always $$(@D)/.f
-	$(call updateIfNotEqual,$(Link$*))
 
 CompileFlags+=-I$(INCDIR)
 LinkFlags+=-L$(LIBDIR)

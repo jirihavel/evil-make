@@ -1,6 +1,10 @@
-##################################################
+################################################################################
 # Initialize the build platform
-##################################################
+################################################################################
+# autodetect srcdir as the path to this Makefile
+ifndef srcdir
+ srcdir:=$(patsubst %/Makefile,%,$(lastword $(MAKEFILE_LIST)))
+endif
 # makedir is path from Makefile to platform.make
 makedir:=../..
 # - config.make may overwrite anything set before

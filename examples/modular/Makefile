@@ -1,11 +1,19 @@
-##################################################
+################################################################################
 # Initialize the build platform
-##################################################
+################################################################################
+# autodetect srcdir as the path to this Makefile
+ifndef srcdir
+ srcdir:=$(patsubst %/Makefile,%,$(lastword $(MAKEFILE_LIST)))
+endif
 # makedir is path from Makefile to platform.make
 makedir:=../..
 # - config.make may overwrite anything set before
 include $(if $(srcdir),$(srcdir)/)$(makedir)/platform.make
 # now we can use "include $(MAKEDIR)/..."
+
+################################################################################
+# Project configuration
+################################################################################
 
 # We want default targets for all libraries and executables
 # executables : installdirs-name, install-name

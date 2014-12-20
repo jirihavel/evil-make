@@ -17,7 +17,47 @@ ifndef VERBOSE
 endif
 
 ##################################################
-# Standard directories
+# Source directories
+##################################################
+
+# Source tree is here
+ifndef srcdir
+ srcdir:=
+endif
+
+MAKEDIR:=$(if $(srcdir),$(srcdir)/)$(makedir)
+
+# Load default values
+include $(MAKEDIR)/platform/defaults.make
+
+INCDIR:=$(if $(srcdir),$(srcdir)/)include
+SRCDIR:=$(if $(srcdir),$(srcdir)/)src
+ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
+
+##################################################
+# Build directories
+##################################################
+
+# we are building here, working dir on default
+# TODO Use this?
+ifndef builddir
+ builddir:=
+endif
+
+# precompiled headers
+#TODO PCHDIR:=$(if $(builddir),$(builddir)/)pch
+# generated source files
+#TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
+# object files and other build stuff
+OBJDIR:=$(if $(builddir),$(builddir)/)obj
+
+LIBDIR:=$(if $(builddir),$(builddir)/)lib
+#DLLDIR:={LIBDIR, BINDIR} (set by system)
+BINDIR:=$(if $(builddir),$(builddir)/)bin
+#DBGDIR:=$(if $(builddir),$(builddir)/)dbg
+
+##################################################
+# Installation directories
 ##################################################
 
 # these may be overridden from the command line
@@ -74,43 +114,6 @@ endif
 
 # dynamic libraries (.dll, .so) go here
 #dlldir:={bindir,libdir} (system)
-
-# source tree is here
-ifndef srcdir
- srcdir:=
-endif
-
-# we are building here, working dir on default
-# TODO Use this?
-ifndef builddir
- builddir:=
-endif
-
-##################################################
-# Source directories
-##################################################
-
-MAKEDIR:=$(if $(srcdir),$(srcdir)/)$(makedir)
-
-INCDIR:=$(if $(srcdir),$(srcdir)/)include
-SRCDIR:=$(if $(srcdir),$(srcdir)/)src
-ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
-
-##################################################
-# Build directories
-##################################################
-
-# precompiled headers
-#TODO PCHDIR:=$(if $(builddir),$(builddir)/)pch
-# generated source files
-#TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
-# object files and other build stuff
-OBJDIR:=$(if $(builddir),$(builddir)/)obj
-
-LIBDIR:=$(if $(builddir),$(builddir)/)lib
-#DLLDIR:={LIBDIR, BINDIR} (set by system)
-BINDIR:=$(if $(builddir),$(builddir)/)bin
-#DBGDIR:=$(if $(builddir),$(builddir)/)dbg
 
 ##################################################
 # Rule parts
