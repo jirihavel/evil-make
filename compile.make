@@ -16,7 +16,7 @@
 # internal enhanced name
 EM_NAME:=$(NAME)
 
-include $(MAKEDIR)/common/compile.make
+include $(MAKEDIR)/platform/compile.make
 
 EM_NAME:=
 # end
