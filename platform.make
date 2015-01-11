@@ -1,38 +1,53 @@
 # vim: set ft=make:
 
-# first rule is default
+# First rule is the default
 all:
-.PHONY:all installdirs install
+.PHONY:all
+
+# Common phony rules
+.PHONY:installdirs installdirs-dev install install-dev
+
+##################################################
+# Make tree
+##################################################
+
+ifndef MAKEDIR
+ MAKEDIR:=$(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+endif
 
 ##################################################
 # Behavior config
 ##################################################
 
-#load config.make if present
+# Load config.make if present
 -include config.make
 
-#VERBOSE - if empty, commands are not printed
+# VERBOSE - if empty, commands are not printed
 ifndef VERBOSE
  VERBOSE:=
 endif
 
 ##################################################
-# Source directories
+# Source tree
 ##################################################
 
-# Source tree is here
+# Fallback - source tree is here
 ifndef srcdir
  srcdir:=
 endif
 
-MAKEDIR:=$(if $(srcdir),$(srcdir)/)$(makedir)
-
 # Load default values
 include $(MAKEDIR)/platform/defaults.make
 
-INCDIR:=$(if $(srcdir),$(srcdir)/)include
-SRCDIR:=$(if $(srcdir),$(srcdir)/)src
-ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
+ifndef INCDIR
+ INCDIR:=$(if $(srcdir),$(srcdir)/)include
+endif
+ifndef SRCDIR
+ SRCDIR:=$(if $(srcdir),$(srcdir)/)src
+endif
+ifndef ETCDIR
+ ETCDIR:=$(if $(srcdir),$(srcdir)/)etc
+endif
 
 ##################################################
 # Build directories
@@ -49,18 +64,28 @@ endif
 # generated source files
 #TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
 # object files and other build stuff
-OBJDIR:=$(if $(builddir),$(builddir)/)obj
+ifndef OBJDIR
+ OBJDIR:=$(if $(builddir),$(builddir)/)obj
+endif
 
-LIBDIR:=$(if $(builddir),$(builddir)/)lib
+ifndef LIBDIR
+ LIBDIR:=$(if $(builddir),$(builddir)/)lib
+endif
 #DLLDIR:={LIBDIR, BINDIR} (set by system)
-BINDIR:=$(if $(builddir),$(builddir)/)bin
-#DBGDIR:=$(if $(builddir),$(builddir)/)dbg
+ifndef BINDIR
+ BINDIR:=$(if $(builddir),$(builddir)/)bin
+endif
+#TODO DBGDIR:=$(if $(builddir),$(builddir)/)dbg
 
 ##################################################
 # Installation directories
 ##################################################
 
 # these may be overridden from the command line
+
+ifndef DESTDIR
+ DESTDIR:=
+endif
 
 ifndef prefix
  prefix:=/usr/local
@@ -120,8 +145,8 @@ endif
 ##################################################
 
 # Rule runs every time, when depends on always
-.PHONY:always
 always:
+.PHONY:always
 
 ##################################################
 # Directory construction
@@ -152,29 +177,17 @@ em-installdirs-dlldir:
 em-installdirs-libdir:
 	$(MKDIR) $(DESTDIR)$(libdir)
 .PHONY:em-installdirs-libdir
-em-installdirs-includedir:
-	$(MKDIR) $(DESTDIR)$(includedir)
-.PHONY:em-installdirs-includedir
+#em-installdirs-includedir:
+#	$(MKDIR) $(DESTDIR)$(includedir)
+#.PHONY:em-installdirs-includedir
 
 ##################################################
 # Common flags
 ##################################################
 
-#in addition to CPPFLAGS, CFLAGS, CXXFLAGS, LDFLAGS, LDLIBS, ...
-
-# incrementally composed - nonrecursive
-# these variables are meant to be same for all targets
-
-CompileFlags:=
-CompileFlags.c:=
-CompileFlags.cpp:=
-
-LinkFlags:=
-LinkFlags.lib:=
-LinkFlags.dll:=
-LinkFlags.bin:=
-
-# redefine undefined variables as empty
+# CPPFLAGS, CFLAGS, CXXFLAGS, LDFLAGS, LDLIBS, ...
+# -
+# - init undefined as empty
 ifndef CPPFLAGS
  CPPFLAGS:=
 endif
@@ -184,12 +197,27 @@ endif
 ifndef CXXFLAGS
  CXXFLAGS:=
 endif
+ifndef ARFLAGS
+ ARFLAGS:=
+endif
 ifndef LDFLAGS
  LDFLAGS:=
 endif
 ifndef LDLIBS
  LDLIBS:=
 endif
+
+# Internal flags
+# - incrementally composed - nonrecursive
+# - these variables are meant to be same for all targets
+
+EmCompileFlags:=
+EmCompileFlags.c:=
+EmCompileFlags.cxx:=
+
+EmLinkFlags:=
+EmLinkFlags.dll:=
+EmLinkFlags.bin:=
 
 ##################################################
 # Facet detection
@@ -199,19 +227,26 @@ ifndef SYSTEM
  SYSTEM:=detect
 endif
 include $(MAKEDIR)/system/$(SYSTEM).make
+EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
 
 ifndef COMPILER
  COMPILER:=gcc
+else
+ EM_CFG_SED+=-e's/#COMPILER=@COMPILER@/COMPILER=$(COMPILER)/g'
 endif
 include $(MAKEDIR)/compiler/$(COMPILER).make
 
 ifndef ENVIRONMENT
  ENVIRONMENT:=default
+else
+ EM_CFG_SED+=-e's/#ENVIRONMENT=@ENVIRONMENT@/ENVIRONMENT=$(ENVIRONMENT)/g'
 endif
 include $(MAKEDIR)/environment/$(ENVIRONMENT).make
 
 ifndef HARDWARE
  HARDWARE:=generic
+else
+ EM_CFG_SED+=-e's/#HARDWARE=@HARDWARE@/HARDWARE=$(HARDWARE)/g'
 endif
 include $(MAKEDIR)/hardware/$(HARDWARE).make
 
@@ -221,35 +256,25 @@ include $(MAKEDIR)/hardware/$(HARDWARE).make
 
 #initialize optional parameters to be empty
 # to get rid of warnings
-TARGET:=
 ADD_OBJS:=
 
 ##################################################
 # Support rules
 ##################################################
 
-.PHONY:config init
-
-# basic facets
-EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
-ifneq ($(COMPILER),gcc)
- EM_CFG_SED+=-e's/#COMPILER=@COMPILER@/COMPILER=$(COMPILER)/g'
-endif
-ifneq ($(ENVIRONMENT),default)
- EM_CFG_SED+=-e's/#ENVIRONMENT=@ENVIRONMENT@/ENVIRONMENT=$(ENVIRONMENT)/g'
-endif
-ifneq ($(HARDWARE),generic)
- EM_CFG_SED+=-e's/#HARDWARE=@HARDWARE@/HARDWARE=$(HARDWARE)/g'
-endif
+# initialize directory for building out of source
+# - do not use when building in source
+# - TODO : check in source build
+init:
+	@echo "Creating proxy Makefile"
+	@echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
+	@echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
+.PHONY:init
 
 # create default config.make
 config:
 	@echo "Creating default config.make"
 	@sed $(EM_CFG_SED) $(MAKEDIR)/config.make.in > config.make
+.PHONY:config
 
-# initialize directory for building out of source
-init:
-	@echo "Creating proxy Makefile"
-	@echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
-	@echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
-#end
+# end

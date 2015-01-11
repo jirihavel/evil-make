@@ -13,6 +13,7 @@ endif
 ifndef DLLDIR
  DLLDIR:=$(BINDIR)
 endif
+
 DEFEXT:=.def
 
 # TODO : use different stuff than unixutils

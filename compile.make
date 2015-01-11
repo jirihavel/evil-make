@@ -1,9 +1,10 @@
 # vim: set ft=make:
-#input :
+#config :
 # VERBOSE
 # SRCDIR, OBJDIR
 # DEPEXT, OBJEXT
 # CONFIG
+#input :
 # NAME
 # SRCS
 # TODO : DEPS
@@ -12,22 +13,10 @@
 #output:
 # OBJS + PIC_OBJS
 
-# Compile PIC versions in <config>-pic
-ifneq ($(HAVE_PIC),)
- # obj/[<config>-]pic
- EM_OBJPATH:=$(OBJDIR)/$(if $(CONFIG),$(CONFIG)-)pic
- include $(MAKEDIR)/common/compile.make
- $(OBJS):PIC:=1
- PIC_OBJS:=$(OBJS)
-endif
+# internal enhanced name
+EM_NAME:=$(NAME)
 
-# Compile default versions in <config>
-# obj[/config]
-EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
 include $(MAKEDIR)/common/compile.make
 
-# On platforms without PIC, use default versions for both
-ifeq ($(HAVE_PIC),)
- PIC_OBJS:=$(OBJS)
-endif
+EM_NAME:=
 # end

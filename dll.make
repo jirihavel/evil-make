@@ -23,10 +23,12 @@
 # - all depend on DLL
 include $(MAKEDIR)/system/$(SYSTEM_KIND)/dll-names.make
 
-# MAP is created with DLL
-MAP:=$(DLL).map
-$(DLL):MAP:=$(MAP)
-$(MAP):$(DLL)
+# Linker MAP file can be created during linking
+ifneq ($(WANT_MAP),)
+ MAP:=$(DLL).map
+ $(DLL):MAP:=$(MAP)
+ $(MAP):$(DLL)
+endif
 
 PKG:=$(LIBDIR)/pkgconfig/$(NAME)$(SUFFIX).pc
 # generate PKG
@@ -37,83 +39,99 @@ $(PKG):$(LIB)
 # Compilation
 ##################################################
 
-# compile (sets OBJS + PIC_OBJ)
-include $(MAKEDIR)/compile.make
+# internal enhanced name
+EM_NAME:=lib$(NAME)
+
+# compile (sets PIC_OBJS + EM_OBJPATH)
+include $(MAKEDIR)/platform/compile.make
+
+EM_NAME:=
 
 # use PIC objects if system has them
 OBJS:=$(PIC_OBJS)
 
+##################################################
+# Linking
+##################################################
+
 # objects + libs from previous linking
 #  EM_OBJPATH is set by compile.make
-EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).dll.cmd
+EM_CMD:=$(EM_OBJPATH)/lib$(NAME).dll.cmd
 
-EM_DEPS:=$(foreach d,$(DEPS),$(Libraries.$d))
+# get library names for DEPS
+EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
+$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $$(@D)/.f
+	@$(if $(VERBOSE),echo "Checking $@")
 	$(call updateIfNotEqual,$(Link.dll) $(EM_LINK))
 
 # link
-ifeq ($(VERBOSE),)
-$(DLL):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
+$(DLL):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
-	@$(Link.dll) $(EM_LINK)
+	$(if $(VERBOSE),,@)$(Link.dll) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
-else
-$(DLL):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
-	$(Link.dll) $(EM_LINK)
-	objcopy --only-keep-debug $@ $@.debug
-	strip -g $@
-	objcopy --add-gnu-debuglink=$@.debug $@
-endif 
 
-# register library for DEPS
-Libraries.$(NAME).dll:=$(LIB)
+##################################################
+# Register library
+##################################################
 
-# register the library name
-#Dependencies.$(NAME):=$(DLL)
+EmLibraryPieces.lib$(NAME):=$(LIB)
+EmLibraryPieces.lib$(NAME).dll:=$(LIB)
 
 ##################################################
 # Installation
 ##################################################
 
-em-installdirs-$(NAME):em-installdirs-dlldir
-em-installdirs-$(NAME):$(foreach d,$(DEPS),$(Dependencies.installdirs.$d))
+em-installdirs-lib$(NAME):em-installdirs-dlldir
+em-installdirs-lib$(NAME):$(foreach d,$(DEPS),em-installdirs-$(basename $d))
 .PHONY:em-installdirs-$(NAME)
+
+em-installdirs-lib$(NAME)-dev:em-installdirs-dlldir
+em-installdirs-lib$(NAME)-dev:em-installdirs-libdir
+em-installdirs-lib$(NAME)-dev:$(foreach d,$(DEPS),em-installdirs-$(basename $d)-dev)
+.PHONY:em-installdirs-$(NAME)-dev
 
 # create internal rule that does the instalation
 include $(MAKEDIR)/system/$(SYSTEM_KIND)/dll-install.make
+.PHONY:em-install-dll$(NAME) em-install-dll$(NAME)-dev
 
-# hook dependencies
-em-install-$(NAME):$(foreach d,$(DEPS),$(Dependencies.install.$d))
+em-install-lib$(NAME):em-install-dll$(NAME)
+em-install-lib$(NAME):$(foreach d,$(DEPS),em-install-$(basename $d))
+.PHONY:em-installdirs-$(NAME)
 
-# register install rule for DEPS
-Dependencies.installdirs.$(NAME).dll:=em-installdirs-$(NAME)
-Dependencies.install.$(NAME).dll:=em-install-$(NAME)
+em-install-lib$(NAME)-dev:em-install-dll$(NAME)
+em-install-lib$(NAME)-dev:em-install-dll$(NAME)-dev
+em-install-lib$(NAME)-dev:$(foreach d,$(DEPS),em-install-$(basename $d)-dev)
+.PHONY:em-installdirs-$(NAME)-dev
 
 # install
-ifneq ($(TARGET),)
- $(TARGET):$(DLL)
- .PHONY:$(TARGET)
+ifneq ($(WANT_TARGET),)
+ lib$(NAME):$(DLL)
+ .PHONY:lib$(NAME)
 
- installdirs-$(TARGET):em-installdirs-dlldir
- .PHONY:installdirs-$(TARGET)
+ installdirs-lib$(NAME):em-installdirs-lib$(NAME)
+ .PHONY:installdirs-lib$(NAME)
 
- install-$(TARGET):em-install-$(NAME)
- .PHONY:install-$(TARGET)
+ installdirs-lib$(NAME)-dev:em-installdirs-lib$(NAME)-dev
+ .PHONY:installdirs-lib$(NAME)-dev
 
-# install-$(TARGET)-dev:install-$(TARGET) em-install-$(TARGET)-dev
+ install-lib$(NAME):em-install-lib$(NAME)
+ .PHONY:install-lib$(NAME)
+
+ install-lib$(NAME)-dev:em-install-lib$(NAME)-dev
+ .PHONY:install-lib$(NAME)-dev
+
+
 # install-$(TARGET)-pkg:TGT:=$(TARGET)
 # install-$(TARGET)-pkg:TGT_FLAGS:=-DPREFIX=$(prefix) -DVERSION=$(MAJOR_VERSION).$(MINOR_VERSION).0
 # install-$(TARGET)-pkg:
 #	$(CPP) -P -o $(DESTDIR)$(libdir)/pkgconfig/$(TGT).pc -x c $(SRCDIR)/pkgconfig/$(TGT).pc.in $(TGT_FLAGS)
-
- TARGET:=
 endif
 # end

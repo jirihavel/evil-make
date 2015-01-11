@@ -8,21 +8,19 @@ OBJS:=$(patsubst $(SRCDIR)/%,$(EM_OBJPATH)/%$(OBJEXT),$(SRCS))
 $(OBJS):EM_FLAGS:=$(FLAGS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --cflags))
 
 # flags from previous compilations
-# file will change only when flags change
-$(EM_OBJPATH)/$(NAME).%.cmd:always $$(@D)/.f
+# - file will change only when flags change
+$(EM_OBJPATH)/$(EM_NAME).%.cmd:always $$(@D)/.f
+	@$(if $(VERBOSE),echo "Checking $@")
+	@echo "$(Compile.$*) $(EM_FLAGS)" > $@.new
 	$(call updateIfNotEqual,$(Compile.$*) $(EM_FLAGS))
 
 # compile (+ generate *.d)
-ifeq ($(VERBOSE),)
- $(OBJS):$(EM_OBJPATH)/%$(OBJEXT):$(SRCDIR)/% $(EM_OBJPATH)/$(NAME)$$(suffix $$*).cmd $$(@D)/.f
+$(OBJS):$(EM_OBJPATH)/%$(OBJEXT):$(SRCDIR)/% $(EM_OBJPATH)/$(EM_NAME)$$(suffix $$*).cmd $$(@D)/.f
 	@echo "Compiling $(if $(PIC),PIC )$<"
-	@$(Compile$(suffix $*)) $(EM_FLAGS) $<
-else
- $(OBJS):$(EM_OBJPATH)/%$(OBJEXT):$(SRCDIR)/% $(EM_OBJPATH)/$(NAME)$$(suffix $$*).cmd $$(@D)/.f
-	$(Compile$(suffix $*)) $(EM_FLAGS) $<
-endif
+	$(if $(VERBOSE),,@)$(Compile$(suffix $*)) $(EM_FLAGS) $<
 
 # include dependencies from previous compilations
 # obj/a.c.o -> obj/a.c.d
 -include $(patsubst %$(OBJEXT),%$(DEPEXT),$(OBJS))
+
 # end

@@ -1,7 +1,11 @@
 # vim: set ft=make:
-#input :
+#config :
+# VERBOSE
 # SRCDIR, OBJDIR, BINDIR
 # DEPEXT, OBJEXT, BINEXT
+# CONFIG, SUFFIX
+# WANT_MAP, WANT_TARGET
+#input :
 # NAME
 # SRCS
 # PKGS
@@ -27,55 +31,75 @@ endif
 # Compilation
 ##################################################
 
-# compile (sets OBJS and EM_OBJPATH)
-include $(MAKEDIR)/compile.make
+# compile as nonpic
+# - create <name>.{c,cpp,...}.cmd files
 
+# internal enhanced name
+EM_NAME:=$(NAME)
+
+# compile (sets OBJS and EM_OBJPATH)
+include $(MAKEDIR)/platform/compile.make
+
+EM_NAME:=
+
+# additional compiled files
 OBJS+=$(ADD_OBJS)
 
-EM_DEPS:=$(foreach d,$(DEPS),$(Libraries.$d))
+##################################################
+# Linking
+##################################################
+
+# get library names for DEPS
+EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(EM_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
+$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
 
 # objects + libs from previous linking
 # *.link will change only when different from before
 EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd 
 $(EM_CMD):always $$(@D)/.f
+	@$(if $(VERBOSE),echo "Checking $@")
 	$(call updateIfNotEqual,$(Link.bin) $(EM_LINK))
 
-$(BIN):$(OBJS) $(EM_CMD) $(EM_DEPS) $$(@D)/.f
+$(BIN):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
 
-# hook all dependencies to the executable
-$(BIN):$(foreach d,$(DEPS),$(Dependencies.$d))
-
-# register the executable name
-Dependencies.$(NAME):=$(BIN)
-
 ##################################################
-# Installation
+# Targets
 ##################################################
+
+em-$(NAME):$(BIN)
+.PHONY:em-$(NAME)
 
 em-installdirs-$(NAME):em-installdirs-bindir
-em-installdirs-$(NAME):$(foreach d,$(DEPS),$(Dependencies.installdirs.$d))
+em-installdirs-$(NAME):$(foreach d,$(DEPS),em-installdirs-$(basename $d))
 .PHONY:em-installdirs-$(NAME)
 
+em-installdirs-$(NAME)-dev:em-installdirs-bindir
+em-installdirs-$(NAME)-dev:$(foreach d,$(DEPS),em-installdirs-$(basename $d)-dev)
+.PHONY:em-installdirs-$(NAME)-dev
+
 # internal rule that does the instalation
-em-install-$(NAME):$(BIN) $(foreach d,$(DEPS),$(Dependencies.install.$d))
+em-do-install-$(NAME):$(BIN)
 	$(INSTALL_PROGRAM) $< $(DESTDIR)$(bindir)
+.PHONY:em-do-install-$(NAME)
+
+em-install-$(NAME):em-do-install-$(NAME)
+em-install-$(NAME):$(foreach d,$(DEPS),em-install-$(basename $d))
 .PHONY:em-install-$(NAME)
 
-# register install rule for DEPS
-Dependencies.installdirs.$(NAME):=em-installdirs-$(NAME)
-Dependencies.install.$(NAME):=em-install-$(NAME)
+em-install-$(NAME)-dev:em-do-install-$(NAME)
+em-install-$(NAME)-dev:$(foreach d,$(DEPS),em-install-$(basename $d)-dev)
+.PHONY:em-install-$(NAME)-dev
 
 ifneq ($(WANT_TARGET),)
- $(NAME):$(BIN)
+ $(NAME):em-$(NAME)
  .PHONY:$(NAME)
 
  installdirs-$(NAME):em-installdirs-$(NAME)
