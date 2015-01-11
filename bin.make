@@ -54,7 +54,7 @@ EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
+$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
 
 # objects + libs from previous linking
 # *.link will change only when different from before

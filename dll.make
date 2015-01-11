@@ -63,7 +63,7 @@ EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) $(PKGS) --libs))
+$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $$(@D)/.f
