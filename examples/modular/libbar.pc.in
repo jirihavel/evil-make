@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+includedir=@INCLUDEDIR@
+libdir=@LIBDIR@
+
+Name:foo library
+Description:Useless example library bar. 
+Version:@VERSION@
+Requires:
+Cflags:-I${includedir}
+Libs:-L${libdir} -lbar

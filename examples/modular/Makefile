@@ -1,3 +1,4 @@
+# vim: set ft=make:
 ################################################################################
 # Initialize the build platform
 ################################################################################
@@ -53,38 +54,58 @@ CXXFLAGS:=-std=c++11
 # - dll and lib pieces prepend it with lib, so they do not conflict with bin
 # DEPS are names of previous pieces that are dependencies of this one
 # - circular dependencies are not allowed
+# - similar install* rules are linked together
 # SRCS is the list of source files
 # - will be compiled into object files according to their extensions
 # FLAGS, LIBS are parameters for compiler and linker
 # - currently common for all source types
+# PKG_IN is input pkg-config file
 
-# build all src/foo/*.c as a static library lib/libfoo.a
+# Build all src/foo/*.c as a static library lib/libfoo.a
 # - targets libfoo, installdirs-libfoo-dev, install-libfoo-dev
 NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
+PKG_IN:=libfoo.pc.in
 include $(MAKEDIR)/lib.make
+LIBFOO:=$(LIB)
 
-# build src/foo.c as executable that uses libfoo
+# Build PIC version of libfoo
+# - internal stuff, no phony rules
+# - on nonpic platforms, it reuses stuff from lib.make (so it must be included after lib.make)
+# - on PIC platforms, it builds stuff in config-pic
+include $(MAKEDIR)/pic.make
+PICFOO:=$(PIC)
+
+# Build src/foo.c as executable that uses libfoo
 # - targets foo, installdirs-foo, install-foo
 DEPS:=libfoo
+PKGS:=libfoo
 SRCS:=$(SRCDIR)/foo.c
 include $(MAKEDIR)/bin.make
+$(BIN):$(LIBFOO)
 
-# build all src/bar/*.c as a dynamic library
+# Build all src/bar/*.c as a dynamic library
 # - lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a
 # - targets libbar, install[dirs]-libbar[-dev]
 # - dev versions install libbar.a on windows
-# - depends on PIC version of libfoo
+# - depends on PIC version of libfoo, so PKGS do not work now
 NAME:=bar
 DEPS:=libfoo.pic
+PKGS:=
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
+PKG_IN:=libbar.pc.in
+LIBS:=$(PICFOO)
 include $(MAKEDIR)/dll.make
+IMPBAR:=$(IMP)
+LIBS:=
 
 # build src/bar.c as executable that uses libbar
 # - depends on libbar and nonPIC libfoo
 DEPS:=libbar libfoo
+PKGS:=libbar libfoo
 SRCS:=$(SRCDIR)/bar.c
 include $(MAKEDIR)/bin.make
+$(BIN):$(IMPBAR)
 
 # C executable with target main
 # - bin/main[.exe]

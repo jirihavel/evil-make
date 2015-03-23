@@ -1,16 +1,30 @@
 # vim: set ft=make:
-LIB:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(LIBEXT)
-DEF:=$(LIBDIR)/lib$(NAME)$(SUFFIX).def
-DLL:=$(DLLDIR)/$(DLLPREFIX)$(NAME)$(SUFFIX)$(DLLEXT)
 
-# something for linker
-$(DLL):IMPLIB:=$(LIB)
-$(DLL):DEF:=$(DEF)
+ifneq ($(WANT_DEF),)
+ DEF:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(DEFEXT)
+ $(DLL):DEF:=$(DEF)
+endif
 
-# import lib is created with dll
-$(LIB):$(DLL)
-#	@$(TOUCH) $(LIB)
+# -- Import library --
 
-# create also directory for import lib
+IMP:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(LIBEXT)
+
+# Pass to linker
+$(DLL):IMP:=$(IMP)
+
+# New import lib is created with the dll
+$(IMP):$(DLL)
+
+# Create also directory for the import lib
 $(DLL):$(LIBDIR)/.f
+
+# -- Install --
+
+# Copy dll
+em-install-dll$(NAME):$(DLL)
+	$(INSTALL_DATA) $< $(DESTDIR)$(dlldir)
+
+# Copy import library
+em-install-dll$(NAME)-dev:$(IMP)
+	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
 #end

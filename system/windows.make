@@ -20,6 +20,7 @@ DEFEXT:=.def
 TOUCH:=touch
 MKDIR:=mkdir -p
 COPY:=cp
+MOVE:=mv
 INSTALL:=cp
 INSTALL_PROGRAM:=$(INSTALL)
 INSTALL_DATA:=$(INSTALL)
@@ -32,7 +33,7 @@ INSTALL_DATA:=$(INSTALL)
 INSTALL_PROGRAM:=$(INSTALL)
 INSTALL_DATA:=$(INSTALL)
 
-PKG_CONFIG:=pkg-config
+PKG_CONFIG:=PKG_CONFIG_PATH=$(LIBDIR)/pkgconfig pkg-config
 
 # PIC is not used on windows
 HAVE_PIC:=
