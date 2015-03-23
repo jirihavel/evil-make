@@ -33,9 +33,10 @@ include $(MAKEDIR)/gmsl/gmsl
 # Source directories
 ##################################################
 
-# Source location - fallback
-ifndef srcdir
- srcdir:=
+# Source location
+# - now it is safe to use $(srcdir)/...
+ifeq ($(srcdir),)
+ srcdir:=.
 endif
 
 ifndef INCDIR
@@ -176,9 +177,9 @@ em-installdirs-libdir:
 em-installdirs-pkgdir:em-installdirs-libdir
 	$(MKDIR) $(DESTDIR)$(libdir)/pkgconfig
 .PHONY:em-installdirs-pkgdir
-#em-installdirs-includedir:
-#	$(MKDIR) $(DESTDIR)$(includedir)
-#.PHONY:em-installdirs-includedir
+em-installdirs-includedir:
+	$(MKDIR) $(DESTDIR)$(includedir)
+.PHONY:em-installdirs-includedir
 
 ##################################################
 # Common flags

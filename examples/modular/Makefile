@@ -65,7 +65,7 @@ CXXFLAGS:=-std=c++11
 # - targets libfoo, installdirs-libfoo-dev, install-libfoo-dev
 NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
-PKG_IN:=libfoo.pc.in
+PKG_IN:=$(srcdir)/libfoo.pc.in
 include $(MAKEDIR)/lib.make
 
 # Build PIC version of libfoo
@@ -88,7 +88,7 @@ include $(MAKEDIR)/bin.make
 NAME:=bar
 DEPS:=libfoo.pic
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
-PKG_IN:=libbar.pc.in
+PKG_IN:=$(srcdir)/libbar.pc.in
 include $(MAKEDIR)/dll.make
 
 # build src/bar.c as executable that uses libbar
