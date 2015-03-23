@@ -67,22 +67,18 @@ NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
 PKG_IN:=libfoo.pc.in
 include $(MAKEDIR)/lib.make
-LIBFOO:=$(LIB)
 
 # Build PIC version of libfoo
 # - internal stuff, no phony rules
 # - on nonpic platforms, it reuses stuff from lib.make (so it must be included after lib.make)
-# - on PIC platforms, it builds stuff in config-pic
+# - on PIC platforms, it builds stuff in obj/[<config>-]pic/
 include $(MAKEDIR)/pic.make
-PICFOO:=$(PIC)
 
 # Build src/foo.c as executable that uses libfoo
 # - targets foo, installdirs-foo, install-foo
-DEPS:=libfoo
-PKGS:=libfoo
+DEPS:=libfoo.lib
 SRCS:=$(SRCDIR)/foo.c
 include $(MAKEDIR)/bin.make
-$(BIN):$(LIBFOO)
 
 # Build all src/bar/*.c as a dynamic library
 # - lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a
@@ -91,34 +87,28 @@ $(BIN):$(LIBFOO)
 # - depends on PIC version of libfoo, so PKGS do not work now
 NAME:=bar
 DEPS:=libfoo.pic
-PKGS:=
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
 PKG_IN:=libbar.pc.in
-LIBS:=$(PICFOO)
 include $(MAKEDIR)/dll.make
-IMPBAR:=$(IMP)
-LIBS:=
 
 # build src/bar.c as executable that uses libbar
 # - depends on libbar and nonPIC libfoo
-DEPS:=libbar libfoo
-PKGS:=libbar libfoo
+DEPS:=libfoo.lib libbar.dll
 SRCS:=$(SRCDIR)/bar.c
 include $(MAKEDIR)/bin.make
-$(BIN):$(IMPBAR)
 
 # C executable with target main
 # - bin/main[.exe]
 # - depends on libfoo (normal lib)
 NAME:=main
-DEPS:=libfoo
+DEPS:=libfoo.lib
 SRCS:=$(SRCDIR)/main.c
 include $(MAKEDIR)/bin.make
 
 # C++ executable with target mainpp
 # - depends on libbar
 NAME:=mainpp
-DEPS:=libbar
+DEPS:=libbar.dll
 SRCS:=$(SRCDIR)/main.cpp
 include $(MAKEDIR)/bin.make
 

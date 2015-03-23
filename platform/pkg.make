@@ -18,14 +18,16 @@ $(EM_PKG_SED):always $$(@D)/.f
 $(PKG) em-install-pkg$(NAME):EM_PKG_SED:=$(EM_PKG_SED)
 
 $(PKG):$(PKG_IN) $(EM_PKG_SED) $(EM_PKG_BUILDDIRS_SED) $$(@D)/.f
-	$(if $(VERBOSE),,@)sed -f $(EM_PKG_SED) -f $(EM_PKG_BUILDDIRS_SED) $< > $(PKG)
+	$(if $(VERBOSE),,@)sed -f $(EM_PKG_SED) -f $(EM_PKG_BUILDDIRS_SED) $< > $@
 
 em-install-pkg$(NAME):EM_PKG:=$(DESTDIR)$(libdir)/pkgconfig/lib$(NAME)$(SUFFIX).pc
 
-em-install-pkg$(NAME):$(PKG_IN) $(EM_PKG_INSTALLDIRS_SED)
+em-install-pkg$(NAME):$(PKG_IN) $(EM_PKG_SED) $(EM_PKG_INSTALLDIRS_SED)
 	sed -f $(EM_PKG_SED) -f $(EM_PKG_INSTALLDIRS_SED) $< > $(EM_PKG)
 .PHONY:em-install-pkg$(NAME)
 
 em-installdirs-lib$(NAME)-dev:em-installdirs-pkgdir
 em-install-lib$(NAME)-dev:em-install-pkg$(NAME)
+
+EM_PKG_SED:=
 # end

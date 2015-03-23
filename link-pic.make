@@ -13,6 +13,6 @@ endif
 
 # -- Register library --
 
-EmLibraryPieces.lib$(NAME).pic:=$(PIC)
+EmLinkDeps.lib$(NAME).pic:=$(PIC)
 
 # end

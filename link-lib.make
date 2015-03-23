@@ -16,7 +16,7 @@ include $(MAKEDIR)/platform/link-lib-pic.make
 
 # -- Register library --
 
-EmLibraryPieces.lib$(NAME).lib:=$(LIB)
+EmLinkDeps.lib$(NAME).lib:=$(LIB) $(foreach d,$(DEPS),$(EmLinkDeps.$d))
 
 ##################################################
 # Install

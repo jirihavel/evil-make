@@ -27,13 +27,13 @@ $(OBJS):WANT_PIC:=$(HAVE_PIC)
 # -- Link --
 
 # Library names for DEPS
-EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
+EM_LINK_DEPS:=$(foreach d,$(DEPS),$(EmLinkDeps.$d))
 
 EM_CMD:=$(OBJDIR)/lib$(NAME)$(SUFFIX).dll.cmd
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
+$(DLL):EM_LINK:=$(OBJS) $(EM_LINK_DEPS) $(LIBS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $$(@D)/.f
@@ -41,7 +41,7 @@ $(EM_CMD):always $$(@D)/.f
 	@$(call UpdateIfNotEqual,$@,$(Link.dll) $(EM_LINK))
 
 # Link
-$(DLL):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
+$(DLL):$(EM_LINK_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.dll) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@.debug
@@ -50,6 +50,8 @@ $(DLL):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
 
 EM_LIB_DEPS:=
 EM_CMD:=
+
+EmLinkDeps.lib$(NAME).dll:=$(IMP)
 
 ##################################################
 # Install

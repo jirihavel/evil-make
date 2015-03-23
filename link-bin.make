@@ -24,11 +24,11 @@ EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd
 
 # Get library names for DEPS
 # - these are dependencies of BIN
-EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
+EM_LINK_DEPS:=$(foreach d,$(DEPS),$(EmLinkDeps.$d))
 
 # rule specific variable beause of late expansion in commands
 # append pkg-config --libs
-$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
+$(BIN):EM_LINK:=$(OBJS) $(EM_LINK_DEPS) $(LIBS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
 
 # objects + libs from previous linking
 # *.link will change only when different from before
@@ -36,7 +36,7 @@ $(EM_CMD):always $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
 	@$(call UpdateIfNotEqual,$@,$(Link.bin) $(EM_LINK))
 
-$(BIN):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
+$(BIN):$(EM_LINK_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK)
 	@objcopy --only-keep-debug $@ $@$(DBGEXT)
@@ -50,6 +50,9 @@ EM_LIB_DEPS:=
 ##################################################
 # Targets
 ##################################################
+
+em-$(NAME):$(BIN)
+.PHONY:em-$(NAME)
 
 em-installdirs-$(NAME):    em-installdirs-bindir
 em-installdirs-$(NAME)-dev:em-installdirs-bindir
@@ -67,7 +70,7 @@ EM_NAME:=$(NAME)
 include $(MAKEDIR)/platform/install.make
 
 ifneq ($(WANT_TARGET),)
- $(NAME):$(BIN)
+ $(NAME):em-$(NAME)
  .PHONY:$(NAME)
 
  installdirs-$(NAME):em-installdirs-$(NAME)
