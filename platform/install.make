@@ -1,4 +1,8 @@
 # vim: set ft=make:
+#in:
+# EM_NAME = [lib]name
+
+.PHONY:em-$(EM_NAME)
 
 em-installdirs-$(EM_NAME):    $(foreach d,$(DEPS),em-installdirs-$(basename $d))
 .PHONY:em-installdirs-$(EM_NAME)

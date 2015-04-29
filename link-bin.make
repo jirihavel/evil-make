@@ -18,27 +18,21 @@ endif
 # Linking
 ##################################################
 
-EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
+EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/$(NAME)$(SUFFIX).bin.cmd 
 
-EM_CMD:=$(EM_OBJPATH)/$(NAME)$(SUFFIX).bin.cmd 
-
-# Get library names for DEPS
-# - these are dependencies of BIN
-EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
-
-# rule specific variable beause of late expansion in commands
-# append pkg-config --libs
-$(BIN):EM_LINK:=$(OBJS) $(LIBS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
+# rule specific variables beause of late expansion in commands
+$(BIN):EM_PKGS:=$(strip $(PKGS) $(foreach d,$(DEPS),$(EmLibraryPkgs.$d)))
+$(BIN):EM_LINK:=$(OBJS) $(LIBS)
 
 # objects + libs from previous linking
 # *.link will change only when different from before
-$(EM_CMD):always $$(@D)/.f
+$(EM_CMD):always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call UpdateIfNotEqual,$@,$(Link.bin) $(EM_LINK))
+	@$(call UpdateIfNotEqual,$@,$(Link.bin) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS))))
 
-$(BIN):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
+$(BIN):$(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
-	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK)
+	$(if $(VERBOSE),,@)$(Link.bin) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS)))
 	@objcopy --only-keep-debug $@ $@$(DBGEXT)
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@$(DBGEXT) $@
@@ -51,8 +45,10 @@ EM_LIB_DEPS:=
 # Targets
 ##################################################
 
+em-$(NAME):$(BIN)
+
 em-installdirs-$(NAME):    em-installdirs-bindir
-em-installdirs-$(NAME)-dev:em-installdirs-bindir
+em-installdirs-$(NAME)-dev:em-installdirs-$(NAME)
 
 # Internal rule that does the instalation
 em-do-install-$(NAME):$(BIN)
@@ -60,14 +56,14 @@ em-do-install-$(NAME):$(BIN)
 .PHONY:em-do-install-$(NAME)
 
 em-install-$(NAME):    em-do-install-$(NAME)
-em-install-$(NAME)-dev:em-do-install-$(NAME)
+em-install-$(NAME)-dev:em-install-$(NAME)
 
 # Hook DEPS to rules
 EM_NAME:=$(NAME)
 include $(MAKEDIR)/platform/install.make
 
 ifneq ($(WANT_TARGET),)
- $(NAME):$(BIN)
+ $(NAME):em-$(NAME)
  .PHONY:$(NAME)
 
  installdirs-$(NAME):em-installdirs-$(NAME)

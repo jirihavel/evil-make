@@ -1,11 +1,22 @@
 # vim: set ft=make:
 
-# First rule is the default
+# First rule is the default one
 all:
 .PHONY:all
 
+# init creates proxy makefile for building out of source
+.PHONY:init
+
+# config creates config.make with stored config
+.PHONY:config
+
+.PHONY:check
+
 # Common phony rules
 .PHONY:installdirs installdirs-dev install install-dev
+	
+# clean removes all output directories
+.PHONY:clean
 
 ##################################################
 # Basic config
@@ -28,6 +39,18 @@ endif
 include $(MAKEDIR)/platform/defaults.make
 
 include $(MAKEDIR)/gmsl/gmsl
+
+##################################################
+# System detection
+##################################################
+
+#ifndef SYSTEM
+# SYSTEM:=$(DEFAULT_SYSTEM)
+#endif
+#include $(MAKEDIR)/system/$(SYSTEM).make
+
+# EM_CFG_SED contains sed rule for overridded config stuff
+#EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
 
 ##################################################
 # Source directories
@@ -58,10 +81,10 @@ ifndef builddir
  builddir:=
 endif
 
+# generated sources and headers
+#TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
 # precompiled headers
 #TODO PCHDIR:=$(if $(builddir),$(builddir)/)pch
-# generated source files
-#TODO GENDIR:=$(if $(builddir),$(builddir)/)obj
 # object files and other build stuff
 ifndef OBJDIR
  OBJDIR:=$(DEFAULT_OBJDIR)
@@ -149,9 +172,11 @@ always:
 ##################################################
 
 # Directories are marked by hidden .f file inside
+# - add $$(@D)/.f as a dependency
 
 # Do not delete directory marker files
 .PRECIOUS:%/.f
+
 # Enable secondary expansions (for $$(@D)/.f)
 .SECONDEXPANSION:
 
@@ -164,21 +189,31 @@ always:
 	@$(TOUCH) $@
 
 # Directory construction for installdirs
+
+# bindir for executables
 em-installdirs-bindir:
 	$(MKDIR) $(DESTDIR)$(bindir)
 .PHONY:em-installdirs-bindir
-# System will hook proper dependency for dlldir
+
+# dlldir for dynamic libraries
+# - system will hook proper dependency for dlldir
 em-installdirs-dlldir:
 .PHONY:em-installdirs-dlldir
+
+# libdir for static and import libraries
 em-installdirs-libdir:
 	$(MKDIR) $(DESTDIR)$(libdir)
 .PHONY:em-installdirs-libdir
+
+# pkgdir for pkg-config .pc files
 em-installdirs-pkgdir:em-installdirs-libdir
 	$(MKDIR) $(DESTDIR)$(libdir)/pkgconfig
 .PHONY:em-installdirs-pkgdir
-#em-installdirs-includedir:
-#	$(MKDIR) $(DESTDIR)$(includedir)
-#.PHONY:em-installdirs-includedir
+
+# includedir for includes
+em-installdirs-includedir:
+	$(MKDIR) $(DESTDIR)$(includedir)
+.PHONY:em-installdirs-includedir
 
 ##################################################
 # Common flags
@@ -234,6 +269,8 @@ endif
 include $(MAKEDIR)/system/$(SYSTEM).make
 EM_CFG_SED:=-e's/@SYSTEM@/$(SYSTEM)/g'
 
+# -- Compiler facet --
+
 SYSTEM_DEFAULT_COMPILER?=gcc
 
 ifndef COMPILER
@@ -262,9 +299,18 @@ include $(MAKEDIR)/hardware/$(HARDWARE).make
 ifndef DLLDIR
  DLLDIR:=$(DEFAULT_DLLDIR)
 endif
-
 ifndef dlldir
  dlldir:=$(default_dlldir)
+endif
+
+ifndef INSTALL_PROGRAM
+ INSTALL_PROGRAM:=$(DEFAULT_INSTALL_PROGRAM)
+endif
+ifndef INSTALL_DATA
+ INSTALL_DATA:=$(DEFAULT_INSTALL_DATA)
+endif
+ifndef PKG_CONFIG
+ PKG_CONFIG:=$(DEFAULT_PKG_CONFIG)
 endif
 
 MoveIfNotEqual?=cmp -s $1 $2 || $(MOVE) -fT $1 $2
@@ -291,17 +337,23 @@ init:
 	@echo "Creating proxy Makefile"
 	@echo "srcdir=$(srcdir)" > $(if $(builddir),$(builddir)/)Makefile
 	@echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
-.PHONY:init
 
 # create default config.make
 config:
 	@echo "Creating default config.make"
 	@sed $(EM_CFG_SED) $(MAKEDIR)/config.make.in > config.make
-.PHONY:config
+
+clean:
+	$(RMDIR) $(BINDIR)
+	$(RMDIR) $(DLLDIR)
+	$(RMDIR) $(LIBDIR)
+	$(RMDIR) $(OBJDIR)
 
 ##################################################
 # Common sed files
 ##################################################
+
+# sed files for creating pkg-config .pc files
 
 EM_PKG_BUILDDIRS_SED:=$(OBJDIR)/.em/em-pkg-builddirs.sed
 EM_PKG_INSTALLDIRS_SED:=$(OBJDIR)/.em/em-pkg-installdirs.sed

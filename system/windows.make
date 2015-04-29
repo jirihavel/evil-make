@@ -3,6 +3,7 @@ SYSTEM_KIND:=windows
 
 BINEXT:=.exe
 DLLEXT:=.dll
+DEFEXT:=.def
 
 # bin/*.dll 
 DLLPREFIX:=
@@ -14,15 +15,16 @@ ifndef DLLDIR
  DLLDIR:=$(BINDIR)
 endif
 
-DEFEXT:=.def
+# PIC is not used on windows
+HAVE_PIC:=
 
 # TODO : use different stuff than unixutils
 TOUCH:=touch
 MKDIR:=mkdir -p
+RMDIR:=rm -rf
 COPY:=cp
 MOVE:=mv
 INSTALL:=cp
-INSTALL_PROGRAM:=$(INSTALL)
 INSTALL_DATA:=$(INSTALL)
 
 # TODO : uses unixutils, find standard alternative
@@ -30,10 +32,5 @@ INSTALL_DATA:=$(INSTALL)
 #RMDIR:=rmdir /s /q
 #COPY:=$(srcdir:/=\\)\make\system\windows\copy.bat
 #INSTALL:=$(srcdir)\make\system\windows\copy.bat
-INSTALL_PROGRAM:=$(INSTALL)
-INSTALL_DATA:=$(INSTALL)
 
 PKG_CONFIG:=PKG_CONFIG_PATH=$(LIBDIR)/pkgconfig pkg-config
-
-# PIC is not used on windows
-HAVE_PIC:=

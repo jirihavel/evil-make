@@ -4,36 +4,48 @@ LIB:=$(LIBDIR)/lib$(NAME)$(SUFFIX)$(LIBEXT)
 
 ifneq ($(PKG_IN),)
  include $(MAKEDIR)/platform/pkg.make
- $(LIB):$(PKG)
+else
+ PKG:=
 endif
 
 # -- Link library --
 
-EM_CMD:=$(OBJDIR)/lib$(NAME)$(SUFFIX).lib.cmd
+EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).lib.cmd
 EM_LIB:=$(LIB)
 
 include $(MAKEDIR)/platform/link-lib-pic.make
 
 # -- Register library --
 
-EmLibraryPieces.lib$(NAME).lib:=$(LIB)
+EmLibraryDeps.lib$(NAME).lib:=$(LIB)
+EmLibraryPkgs.lib$(NAME).lib:=$(PKG)
+EmLibraryPkgDeps.lib$(NAME).lib:=$(PKG) $(foreach d,%(DEPS),$(EmLibraryPkgDeps.$d))
+
+EmLibraryDeps.lib$(NAME):=$(EmLibraryDeps.lib$(NAME).lib)
+EmLibraryPkgs.lib$(NAME):=$(EmLibraryPkgs.lib$(NAME).lib)
+EmLibraryPkgDeps.lib$(NAME):=$(EmLibraryPkgDeps.lib$(NAME).lib)
 
 ##################################################
 # Install
 ##################################################
 
+em-lib$(NAME):$(LIB)
+
 em-installdirs-lib$(NAME)-dev:em-installdirs-libdir
 
-# internal rule that does the instalation
-em-install-lib$(NAME)-dev:$(LIB)
+# Internal rule that does the instalation
+em-do-install-lib$(NAME)-dev:$(LIB)
 	$(INSTALL_DATA) $< $(DESTDIR)$(libdir)
+.PHONY:em-do-install-lib$(NAME)-dev
+
+em-install-lib$(NAME)-dev:em-do-install-lib$(NAME)-dev
 
 # Hook DEPS to rules
 EM_NAME:=lib$(NAME)
 include $(MAKEDIR)/platform/install.make
 
 ifneq ($(WANT_TARGET),)
- lib$(NAME):$(LIB)
+ lib$(NAME):em-lib$(NAME)
  .PHONY:lib$(NAME)
 
  installdirs-lib$(NAME)-dev:em-installdirs-lib$(NAME)-dev

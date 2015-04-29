@@ -2,8 +2,7 @@
 
 ifneq ($(HAVE_PIC),)
  include $(MAKEDIR)/compile-pic.make
- include $(MAKEDIR)/link-pic.make
-else
- PIC:=$(LIB)
 endif
+include $(MAKEDIR)/link-pic.make
+
 # end

@@ -1,7 +1,5 @@
 # vim: set ft=make:
 
-# -- Link library --
-
 ifneq ($(HAVE_PIC),)
  PIC:=$(LIBDIR)/lib$(NAME)$(SUFFIX).pic$(LIBEXT)
  EM_CMD:=$(OBJDIR)/lib$(NAME)$(SUFFIX).pic.cmd
@@ -9,10 +7,9 @@ ifneq ($(HAVE_PIC),)
  include $(MAKEDIR)/platform/link-lib-pic.make
 else
  PIC:=$(LIB)
+ EmLibraryDeps.lib$(NAME).pic:=$(EmLibraryDeps.lib$(NAME).lib)
+ EmLibraryPkgs.lib$(NAME).pic:=$(EmLibraryPkgs.lib$(NAME).lib)
+ EmLibraryPkgDeps.lib$(NAME).pic:=$(EmLibraryPkgDeps.lib$(NAME).lib)
 endif
-
-# -- Register library --
-
-EmLibraryPieces.lib$(NAME).pic:=$(PIC)
 
 # end

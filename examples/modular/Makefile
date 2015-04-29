@@ -65,7 +65,8 @@ CXXFLAGS:=-std=c++11
 # - targets libfoo, installdirs-libfoo-dev, install-libfoo-dev
 NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
-PKG_IN:=libfoo.pc.in
+PKG_IN:=$(if $(srcdir),$(srcdir)/)libfoo.pc.in
+MAJOR_VERSION:=0
 include $(MAKEDIR)/lib.make
 LIBFOO:=$(LIB)
 
@@ -79,10 +80,8 @@ PICFOO:=$(PIC)
 # Build src/foo.c as executable that uses libfoo
 # - targets foo, installdirs-foo, install-foo
 DEPS:=libfoo
-PKGS:=libfoo
 SRCS:=$(SRCDIR)/foo.c
 include $(MAKEDIR)/bin.make
-$(BIN):$(LIBFOO)
 
 # Build all src/bar/*.c as a dynamic library
 # - lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a
@@ -91,10 +90,9 @@ $(BIN):$(LIBFOO)
 # - depends on PIC version of libfoo, so PKGS do not work now
 NAME:=bar
 DEPS:=libfoo.pic
-PKGS:=
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
-PKG_IN:=libbar.pc.in
-LIBS:=$(PICFOO)
+PKG_IN:=$(if $(srcdir),$(srcdir)/)libbar.pc.in
+MAJOR_VERSION:=0
 include $(MAKEDIR)/dll.make
 IMPBAR:=$(IMP)
 LIBS:=
@@ -102,7 +100,6 @@ LIBS:=
 # build src/bar.c as executable that uses libbar
 # - depends on libbar and nonPIC libfoo
 DEPS:=libbar libfoo
-PKGS:=libbar libfoo
 SRCS:=$(SRCDIR)/bar.c
 include $(MAKEDIR)/bin.make
 $(BIN):$(IMPBAR)

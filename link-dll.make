@@ -9,7 +9,8 @@ include $(MAKEDIR)/system/$(SYSTEM_KIND)/dll-names.make
 
 ifneq ($(PKG_IN),)
  include $(MAKEDIR)/platform/pkg.make
- $(LIB):$(PKG)
+else
+ PKG:=
 endif
 
 # Linker MAP file can be created during linking
@@ -26,34 +27,41 @@ $(OBJS):WANT_PIC:=$(HAVE_PIC)
 
 # -- Link --
 
-# Library names for DEPS
-EM_LIB_DEPS:=$(foreach d,$(DEPS),$(EmLibraryPieces.$d))
+EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).dll.cmd
 
-EM_CMD:=$(OBJDIR)/lib$(NAME)$(SUFFIX).dll.cmd
-
-# rule specific variable beause of late expansion in commands
-# append pkg-config --libs
-$(DLL):EM_LINK:=$(OBJS) $(LIBS) $(EM_LIB_DEPS) $(if $(PKGS),$(shell $(PKG_CONFIG) --libs $(PKGS)))
+$(DLL):EM_PKGS:=$(strip $(PKGS) $(foreach d,$(DEPS),$(EmLibraryPkgs.$d))) 
+$(DLL):EM_LINK:=$(OBJS) $(LIBS)
 
 # *.cmd will change only when different from before
-$(EM_CMD):always $$(@D)/.f
+$(EM_CMD):always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call UpdateIfNotEqual,$@,$(Link.dll) $(EM_LINK))
+	@$(call UpdateIfNotEqual,$@,$(Link.dll) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS))))
 
 # Link
-$(DLL):$(EM_LIB_DEPS) $(OBJS) $(EM_CMD) $$(@D)/.f
+$(DLL):$(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
-	$(if $(VERBOSE),,@)$(Link.dll) $(EM_LINK)
+	$(if $(VERBOSE),,@)$(Link.dll) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS)))
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
 
-EM_LIB_DEPS:=
 EM_CMD:=
+
+# -- Register library --
+
+EmLibraryDeps.lib$(NAME).dll:=$(DLL) $(LIB)
+EmLibraryPkgs.lib$(NAME).dll:=$(PKG)
+EmLibraryPkgDeps.lib$(NAME).dll:=$(PKG) $(foreach d,%(DEPS),$(EmLibraryPkgDeps.$d))
+
+EmLibraryDeps.lib$(NAME):=$(EmLibraryDeps.lib$(NAME).dll)
+EmLibraryPkgs.lib$(NAME):=$(EmLibraryPkgs.lib$(NAME).dll)
+EmLibraryPkgDeps.lib$(NAME):=$(EmLibraryPkgDeps.lib$(NAME).dll)
 
 ##################################################
 # Install
 ##################################################
+
+em-lib$(NAME):$(DLL) $(LIB)
 
 # DLL installation rules from dll-names
 .PHONY:em-install-dll$(NAME) em-install-dll$(NAME)-dev
@@ -70,7 +78,7 @@ include $(MAKEDIR)/platform/install.make
 
 # install
 ifneq ($(WANT_TARGET),)
- lib$(NAME):$(DLL)
+ lib$(NAME):em-lib$(NAME)
  .PHONY:lib$(NAME)
 
  installdirs-lib$(NAME):em-installdirs-lib$(NAME)
