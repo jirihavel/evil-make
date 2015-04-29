@@ -13,7 +13,7 @@ endif
 EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).lib.cmd
 EM_LIB:=$(LIB)
 
-include $(MAKEDIR)/platform/link-lib-pic.make
+include $(MAKEDIR)/platform/link-archive.make
 
 # -- Register library --
 

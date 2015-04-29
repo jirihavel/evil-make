@@ -65,17 +65,15 @@ CXXFLAGS:=-std=c++11
 # - targets libfoo, installdirs-libfoo-dev, install-libfoo-dev
 NAME:=foo
 SRCS:=$(wildcard $(SRCDIR)/foo/*.c)
-PKG_IN:=$(if $(srcdir),$(srcdir)/)libfoo.pc.in
+PKG_IN:=$(srcdir)/libfoo.pc.in
 MAJOR_VERSION:=0
 include $(MAKEDIR)/lib.make
-LIBFOO:=$(LIB)
 
 # Build PIC version of libfoo
 # - internal stuff, no phony rules
 # - on nonpic platforms, it reuses stuff from lib.make (so it must be included after lib.make)
-# - on PIC platforms, it builds stuff in config-pic
+# - on PIC platforms, it builds stuff in obj/[<config>-]pic/
 include $(MAKEDIR)/pic.make
-PICFOO:=$(PIC)
 
 # Build src/foo.c as executable that uses libfoo
 # - targets foo, installdirs-foo, install-foo
@@ -91,31 +89,28 @@ include $(MAKEDIR)/bin.make
 NAME:=bar
 DEPS:=libfoo.pic
 SRCS:=$(wildcard $(SRCDIR)/bar/*.c)
-PKG_IN:=$(if $(srcdir),$(srcdir)/)libbar.pc.in
+PKG_IN:=$(srcdir)/libbar.pc.in
 MAJOR_VERSION:=0
 include $(MAKEDIR)/dll.make
-IMPBAR:=$(IMP)
-LIBS:=
 
 # build src/bar.c as executable that uses libbar
 # - depends on libbar and nonPIC libfoo
 DEPS:=libbar libfoo
 SRCS:=$(SRCDIR)/bar.c
 include $(MAKEDIR)/bin.make
-$(BIN):$(IMPBAR)
 
 # C executable with target main
 # - bin/main[.exe]
 # - depends on libfoo (normal lib)
 NAME:=main
-DEPS:=libfoo
+DEPS:=libfoo.lib
 SRCS:=$(SRCDIR)/main.c
 include $(MAKEDIR)/bin.make
 
 # C++ executable with target mainpp
 # - depends on libbar
 NAME:=mainpp
-DEPS:=libbar
+DEPS:=libbar.dll
 SRCS:=$(SRCDIR)/main.cpp
 include $(MAKEDIR)/bin.make
 

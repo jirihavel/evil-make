@@ -1,5 +1,9 @@
 # vim: set ft=make:
 
+##################################################
+# Names
+##################################################
+
 DLL:=$(DLLDIR)/$(DLLPREFIX)$(NAME)$(SUFFIX)$(DLLEXT)
 
 # Generate IMP and DEF on windows or SONAME on unix
@@ -25,7 +29,9 @@ endif
 # - not set for DLL so it does not propagate to other dependencies
 $(OBJS):WANT_PIC:=$(HAVE_PIC)
 
-# -- Link --
+##################################################
+# Link
+##################################################
 
 EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).dll.cmd
 

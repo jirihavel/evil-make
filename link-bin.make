@@ -15,7 +15,7 @@ ifneq ($(WANT_MAP),)
 endif
 
 ##################################################
-# Linking
+# Link
 ##################################################
 
 EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/$(NAME)$(SUFFIX).bin.cmd 

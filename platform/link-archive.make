@@ -1,4 +1,8 @@
 # vim: set ft=make:
+#in :
+# OBJS
+# *EM_CMD - command file
+# *EM_LIB - archive name
 
 $(EM_LIB):OBJS:=$(OBJS)
 

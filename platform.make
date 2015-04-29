@@ -56,9 +56,10 @@ include $(MAKEDIR)/gmsl/gmsl
 # Source directories
 ##################################################
 
-# Source location - fallback
-ifndef srcdir
- srcdir:=
+# Source location
+# - now it is safe to use $(srcdir)/...
+ifeq ($(srcdir),)
+ srcdir:=.
 endif
 
 ifndef INCDIR

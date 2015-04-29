@@ -24,6 +24,7 @@ $(PKG):$(PKG_IN) $(EM_PKG_SED) $(EM_PKG_BUILDDIRS_SED) $$(@D)/.f
 # -- install package --
 
 em-install-pkg$(NAME):EM_PKG:=$(DESTDIR)$(libdir)/pkgconfig/lib$(NAME)$(SUFFIX).pc
+
 em-install-pkg$(NAME):$(PKG_IN) $(EM_PKG_SED) $(EM_PKG_INSTALLDIRS_SED)
 	sed -f $(EM_PKG_SED) -f $(EM_PKG_INSTALLDIRS_SED) $< > $(EM_PKG)
 .PHONY:em-install-pkg$(NAME)
