@@ -316,7 +316,7 @@ endif
 ifndef CXXFLAGS
  CXXFLAGS:=
 endif
-ifndef ARFLAGS
+ifeq ($(origin ARFLAGS),default)
  ARFLAGS:=$(DEFAULT_ARFLAGS)
 endif
 ifndef LDFLAGS

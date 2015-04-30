@@ -9,7 +9,7 @@ $(EM_LIB):OBJS:=$(OBJS)
 # Check command line
 $(EM_CMD):always $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call UpdateIfNotEqual,$@,$(AR) -rcs $(OBJS))
+	@$(call UpdateIfNotEqual,$@,$(AR) $(ARFLAGS) $(OBJS))
 
 # Link <libdir>/lib<name>[-<suffix>].a
 # - ar updates the archive, so delete it before
