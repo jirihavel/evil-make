@@ -9,7 +9,6 @@ DBGEXT:=.dbg
 MAPEXT:=.map
 
 EmCompileFlags+=-I$(INCDIR)
-EmLinkFlags+=-L$(LIBDIR)
 
 # TODO : if HAVE_PIC && PIC -> -fpic
 # else if HAVE_PIE && PIE -> -fpie
@@ -23,20 +22,16 @@ EM_CXXFLAGS=
 # Compilation
 ################################################################################
 
-EmCompile=-o $@ -c -MMD -MP$(if $(WANT_PIE), -fpie)$(if $(WANT_PIC), -fpic) $(EmCompileFlags)
+EmCompileLine=-o $@ -c -MMD -MP $(if $(WANT_PIE),-fpie) $(if $(WANT_PIC),-fpic) $(EmCompileFlags) $(EM_CPPFLAGS) $(CPPFLAGS)
 
-Compile.c=$(CC) $(EmCompile) $(EmCompileFlags.c) $(EM_CPPFLAGS) $(EM_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+# C sources
+EmCompile.c=$(CC) $(EmCompileLine) $(EmCompileFlags.c) $(EM_CFLAGS) $(CFLAGS)
 
-Compile.cxx=$(CXX) $(EmCompile) $(EmCompileFlags.cxx) $(EM_CPPFLAGS) $(EM_CXXFLAGS) $(CPPFLAGS) $(CXXFLAGS)
-Compile.cpp=$(Compile.cxx)
-Compile.cc=$(Compile.cxx)
-Compile.C=$(Compile.cxx)
-
-################################################################################
-# Archives - static libraries
-################################################################################
-
-Link.lib=$(AR) -rcs $@
+# C++ sources
+EmCompile.cxx=$(CXX) $(EmCompileLine) $(EmCompileFlags.cxx) $(EM_CXXFLAGS) $(CXXFLAGS)
+EmCompile.cpp=$(EmCompile.cxx)
+EmCompile.cc=$(EmCompile.cxx)
+EmCompile.C=$(EmCompile.cxx)
 
 ################################################################################
 # Linking
@@ -48,11 +43,11 @@ EM_GNU_DEF=-Wl,--output-def=$(DEF)
 EM_GNU_IMPLIB=-Wl,--out-implib=$(IMP)
 EM_GNU_SONAME=-Wl,-soname=$(SONAME)
 
-EmLink=-o $@ $(if $(MAP),$(EM_GNU_MAP)) $(LinkFlags)
+EmLinkLine=-o $@ $(if $(MAP),$(EM_GNU_MAP)) $(EmLinkFlags)
 
-Link.c.bin=$(CC) $(EmLink) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
-Link.cpp.bin=$(CXX) $(EmLink) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+Link.c.bin=$(CC) $(EmLinkLine) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+Link.cxx.bin=$(CXX) $(EmLinkLine) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
 
-Link.dll=$(CXX) -shared $(EmLink) $(if $(DEF),$(EM_GNU_DEF)) $(if $(IMP),$(EM_GNU_IMPLIB)) $(if $(SONAME),$(EM_GNU_SONAME)) $(EmLinkFlags.dll) $(LDFLAGS) $(LDLIBS)
-Link.bin=$(CXX) $(EmLink) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
+Link.dll=$(CXX) $(EmLinkLine) -shared $(if $(DEF),$(EM_GNU_DEF)) $(if $(IMP),$(EM_GNU_IMPLIB)) $(if $(SONAME),$(EM_GNU_SONAME)) $(EmLinkFlags.dll) $(LDFLAGS) $(LDLIBS)
+Link.bin=$(CXX) $(EmLinkLine) $(EmLinkFlags.bin) $(LDFLAGS) $(LDLIBS)
 # end

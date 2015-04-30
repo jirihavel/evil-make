@@ -17,9 +17,12 @@ include $(MAKEDIR)/platform/link-archive.make
 
 # -- Register library --
 
-EmLibraryDeps.lib$(NAME).lib:=$(LIB)
+# Propagate library dependencies further
+EmLibraryDeps.lib$(NAME).lib:=$(LIB) $(foreach d,$(DEPS),$(EmLibraryDeps.$d))
+# .pc contains dependencies inside
 EmLibraryPkgs.lib$(NAME).lib:=$(PKG)
-EmLibraryPkgDeps.lib$(NAME).lib:=$(PKG) $(foreach d,%(DEPS),$(EmLibraryPkgDeps.$d))
+# But pkg dependencies need transitive closure
+EmLibraryPkgDeps.lib$(NAME).lib:=$(PKG) $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d))
 
 EmLibraryDeps.lib$(NAME):=$(EmLibraryDeps.lib$(NAME).lib)
 EmLibraryPkgs.lib$(NAME):=$(EmLibraryPkgs.lib$(NAME).lib)

@@ -59,7 +59,7 @@ EM_CMD:=
 
 EmLibraryDeps.lib$(NAME).dll:=$(DLL) $(LIB)
 EmLibraryPkgs.lib$(NAME).dll:=$(PKG)
-EmLibraryPkgDeps.lib$(NAME).dll:=$(PKG) $(foreach d,%(DEPS),$(EmLibraryPkgDeps.$d))
+EmLibraryPkgDeps.lib$(NAME).dll:=$(PKG) $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d))
 
 EmLibraryDeps.lib$(NAME):=$(EmLibraryDeps.lib$(NAME).dll)
 EmLibraryPkgs.lib$(NAME):=$(EmLibraryPkgs.lib$(NAME).dll)

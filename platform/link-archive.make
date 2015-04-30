@@ -16,7 +16,7 @@ $(EM_CMD):always $$(@D)/.f
 $(EM_LIB):$(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	@$(RM) $@
-	$(if $(VERBOSE),,@)$(AR) -rcs $@ $(OBJS)
+	$(if $(VERBOSE),,@)$(AR) $(ARFLAGS) $@ $(OBJS)
 
 EM_CMD:=
 EM_LIB:=
