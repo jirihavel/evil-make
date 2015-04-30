@@ -17,26 +17,27 @@ else
  PKG:=
 endif
 
-# Linker MAP file can be created during linking
-# - set MAP variable, so the compiler can detect it
-ifneq ($(WANT_MAP),)
- MAP:=$(DLL)$(MAPEXT)
- $(DLL):MAP:=$(MAP)
- $(MAP):$(DLL)
-endif
-
-# Enforce PIC in object files
+# Enforce PIC in object files (if necessary)
 # - not set for DLL so it does not propagate to other dependencies
 $(OBJS):WANT_PIC:=$(HAVE_PIC)
+
+EM_BIN:=$(DLL)
+EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).dll.cmd	
 
 ##################################################
 # Link
 ##################################################
 
-EM_CMD:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.em/lib$(NAME)$(SUFFIX).dll.cmd
+# Linker MAP file can be created during linking
+# - set MAP variable, so the compiler can detect it
+ifneq ($(WANT_MAP),)
+ MAP:=$(EM_BIN)$(MAPEXT)
+ $(EM_BIN):MAP:=$(MAP)
+ $(MAP):$(EM_BIN)
+endif
 
-$(DLL):EM_PKGS:=$(strip $(PKGS) $(foreach d,$(DEPS),$(EmLibraryPkgs.$d))) 
-$(DLL):EM_LINK:=$(OBJS) $(LIBS)
+$(EM_BIN):EM_PKGS:=$(strip $(PKGS) $(foreach d,$(DEPS),$(EmLibraryPkgs.$d))) 
+$(EM_BIN):EM_LINK:=$(OBJS) $(LIBS)
 
 # *.cmd will change only when different from before
 $(EM_CMD):always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
@@ -44,13 +45,14 @@ $(EM_CMD):always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
 	@$(call UpdateIfNotEqual,$@,$(Link.dll) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS))))
 
 # Link
-$(DLL):$(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(OBJS) $(EM_CMD) $$(@D)/.f
+$(EM_BIN):$(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(OBJS) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.dll) $(EM_LINK) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS)))
 	@objcopy --only-keep-debug $@ $@.debug
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@.debug $@
 
+EM_BIN:=
 EM_CMD:=
 
 # -- Register library --

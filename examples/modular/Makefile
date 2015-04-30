@@ -12,7 +12,7 @@ endif
 # include the platform header
 # - it includes config.make and may overwrite anything set before
 include $(if $(srcdir),$(srcdir)/)$(if $(makedir),$(makedir)/)platform.make
-# - now we can use "include $(MAKEDIR)/..."
+# - now we can use "$(MAKEDIR)/..." and "$(srcdir)/..." without if
 # - platform initialized, end of copy&paste
 
 ################################################################################
