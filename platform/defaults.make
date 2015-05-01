@@ -7,6 +7,8 @@
 # Overriding WHATEVER will be stored in config.make
 # - or platform.make will init that as nonrecursive variable from DEFAULT_WHATEVER
 
+DEFAULT_VERBOSE?=
+
 # System facets
 DEFAULT_SYSTEM     ?=detect
 DEFAULT_COMPILER   ?=gcc

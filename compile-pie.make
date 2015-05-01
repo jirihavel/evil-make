@@ -2,8 +2,7 @@
 
 # Compile sources with decorated name
 EM_NAME:=lib$(NAME)
-EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.pic
+EM_OBJPATH:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))/.pie
 include $(MAKEDIR)/platform/compile.make
 
-# Force PIC if necessary
-$(OBJS):WANT_PIC:=$(HAVE_PIC)
+$(OBJS):WANT_PIE:=$(HAVE_PIE)

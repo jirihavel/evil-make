@@ -13,7 +13,7 @@ $(OBJS):EM_FLAGS:=$(FLAGS)
 # - EM_FLAGS propagate here too
 $(EM_OBJPATH)/.em/$(EM_NAME).%.cmd:always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call UpdateIfNotEqual,$@,$(strip $(EmCompile.$*) $(EM_FLAGS) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --cflags $(EM_PKGS)))))
+	@$(call em_write_ne,$@,$(strip $(EmCompile.$*) $(EM_FLAGS) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --cflags $(EM_PKGS)))))
 
 # Compile (+ generate *.d)
 # - rule only for OBJS
@@ -28,4 +28,3 @@ $(OBJS):$(EM_OBJPATH)/%$(OBJEXT):$(SRCDIR)/% $(EM_OBJPATH)/.em/$(EM_NAME)$$(suff
 # reset temporaries
 EM_NAME:=
 EM_OBJPATH:=
-# end

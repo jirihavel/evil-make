@@ -2,18 +2,15 @@
 ################################################################################
 # Initialize the build platform
 ################################################################################
-# - copy&paste this to any new Makefile, modify <makedir>
-# - <makedir> is path from Makefile to platform.make
+# Copy&Paste this to any new Makefile, modify <makedir>
+# <makedir> is path from Makefile to platform.make
 makedir:=../..
-# autodetect <srcdir> as the path to this Makefile
-ifndef srcdir
- srcdir:=$(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
-endif
-# include the platform header
-# - it includes config.make and may overwrite anything set before
-include $(if $(srcdir),$(srcdir)/)$(if $(makedir),$(makedir)/)platform.make
-# - now we can use "$(MAKEDIR)/..." and "$(srcdir)/..." without if
-# - platform initialized, end of copy&paste
+# <makefile> is filename of this makefile
+makefile:=$(lastword $(MAKEFILE_LIST))
+# include the platform header (and config.make)
+include $(dir $(makefile))$(if $(makedir),$(makedir)/)platform.make
+# - now we can use "$(MAKEDIR)/..." and "$(srcdir)/..."
+# Copy&Paste end
 
 ################################################################################
 # Project configuration
@@ -30,7 +27,6 @@ WANT_MAP:=1
 
 # We want DEF files for DLLs on Windows
 WANT_DEF:=1
-#TODO
 
 # Set some global flags
 # - can be overwritten per target, but the propagation depends on the initial rule so it is not reliable
@@ -70,16 +66,23 @@ MAJOR_VERSION:=0
 include $(MAKEDIR)/lib.make
 
 # Build PIC version of libfoo
-# - internal stuff, no phony rules
+# - internal stuff so far, no phony rules
 # - on nonpic platforms, it reuses stuff from lib.make (so it must be included after lib.make)
 # - on PIC platforms, it builds stuff in obj/[<config>-]pic/
 include $(MAKEDIR)/pic.make
 
-# Build src/foo.c as executable that uses libfoo
-# - targets foo, installdirs-foo, install-foo
-DEPS:=libfoo
-SRCS:=$(SRCDIR)/foo.c
-include $(MAKEDIR)/bin.make
+# Link some executables that use libfoo
+# - SRCDIR, OBJDIR and BINDIR must be modified together
+NAME:=foo
+DEPS:=libfoo.lib
+$(call push_var,SRCDIR,$(SRCDIR)/foo/tools)
+$(call push_var,OBJDIR,$(OBJDIR)/foo/tools)
+$(call push_var,BINDIR,$(BINDIR)/foo)
+SRCS:=$(wildcard $(SRCDIR)/*.c)
+include $(MAKEDIR)/single-bin.make
+$(call pop_var,SRCDIR)
+$(call pop_var,OBJDIR)
+$(call pop_var,BINDIR)
 
 # Build all src/bar/*.c as a dynamic library
 # - lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a

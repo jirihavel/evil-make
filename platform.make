@@ -2,19 +2,11 @@
 
 # First rule is the default one
 all:
-.PHONY:all
-
-# init creates proxy makefile for building out of source
-.PHONY:init
-
-.PHONY:check
+.PHONY:all check clean
 
 # Common phony rules
 .PHONY:installdirs installdirs-dev install install-dev
 	
-# clean removes all output directories
-.PHONY:clean
-
 ##################################################
 # Storing config
 ##################################################
@@ -22,20 +14,21 @@ all:
 # config rule creates config.make with stored config
 .PHONY:config
 
-# EM_CFG_SED contains sed rule for overridded config stuff
-EM_CFG_SED:=
+# EM_CONFIG_SED contains sed rules for changing config template
+EM_CONFIG_SED:=
 
 ##################################################
 # Basic config
 ##################################################
 
-# Source location
-# - now it is safe to use $(srcdir)/...
+# Source tree location
+# - guess from <makefile> if not set
 ifndef srcdir
- srcdir:=.
+ srcdir:=$(patsubst %/,%,$(dir $(makefile)))
 else ifeq ($(srcdir),)
  srcdir:=.
 endif
+# now it is ok to use $(srcdir)/...
 
 # Default builddir is working directory
 # - TODO does anything else make sense?
@@ -44,8 +37,22 @@ ifndef builddir
 else ifeq ($(builddir),)
  builddir:=.
 endif
+# now it is ok to use $(builddir)/...
 
-# init MAKEDIR by path to this file
+# Rule 'init' to set build outside of source tree
+# - proxy makefile sets source tree location and includes original makefile
+ifeq ($(realpath $(makefile)),$(realpath $(builddir)/Makefile))
+ init:
+	@echo "Building in source, command ignored"
+else
+ init:
+	@echo "Creating proxy Makefile"
+	@echo "srcdir=$(srcdir)"     > $(builddir)/Makefile
+	@echo "include $(makefile)" >> $(builddir)/Makefile
+endif
+.PHONY:init
+
+# MAKEDIR is path to this file
 ifndef MAKEDIR
  MAKEDIR:=$(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 endif
@@ -53,15 +60,33 @@ endif
 # Load config.make if present
 -include config.make
 
+# Load defaults
+include $(MAKEDIR)/platform/defaults.make
+
 # VERBOSE - if empty, commands are not printed
 ifndef VERBOSE
- VERBOSE:=
+ VERBOSE:=$(DEFAULT_VERBOSE)
+else ifneq ($(VERBOSE),)
+ EM_CONFIG_SED+=-e's/#VERBOSE:=1/VERBOSE:=1'
 endif
+
+##################################################
+# Basic commands
+##################################################
 
 include $(MAKEDIR)/gmsl/gmsl
 
-# Load defaults
-include $(MAKEDIR)/platform/defaults.make
+# Set variable and then restore its original value
+# Works only for nonrecursive variables
+#
+# var:=foo
+# $(call push_var,var,bar)
+# ... $(var) equals 'bar' here
+# $(call pop_var,var)
+# ... $(var) equals 'foo' here
+#
+push_var=$(call push,EmVariableStack.$1,$($1))$(eval $1:=$2)
+pop_var=$(eval $1:=$(call pop,EmVariableStack.$1))
 
 ##################################################
 # Source directories
@@ -169,24 +194,27 @@ always:
 # Enable secondary expansions (for $$(@D)/.f)
 .SECONDEXPANSION:
 
-#implicit rule to create directory and its marker file
-# add $$(@D)/.f as rule dependency
-# MKDIR and TOUCH will be set by system
+# Implicit rule to create directory and its marker file
+# - MKDIR and TOUCH will be set by system
 %/.f:
 	@echo "Creating $(@D)/"
 	@$(MKDIR) $(@D)
 	@$(TOUCH) $@
 
-# Directory construction for installdirs
+# -- Installation directories --
 
 # bindir for executables
 em-installdirs-bindir:
 	$(MKDIR) $(DESTDIR)$(bindir)
 .PHONY:em-installdirs-bindir
 
-# dlldir for dynamic libraries
-# - set after system fills dlldir
+# dlldir for dynamic libraries (system)
 .PHONY:em-installdirs-dlldir
+
+# includedir for includes
+em-installdirs-includedir:
+	$(MKDIR) $(DESTDIR)$(includedir)
+.PHONY:em-installdirs-includedir
 
 # libdir for static and import libraries
 em-installdirs-libdir:
@@ -198,11 +226,6 @@ em-installdirs-pkgdir:em-installdirs-libdir
 	$(MKDIR) $(DESTDIR)$(libdir)/pkgconfig
 .PHONY:em-installdirs-pkgdir
 
-# includedir for includes
-em-installdirs-includedir:
-	$(MKDIR) $(DESTDIR)$(includedir)
-.PHONY:em-installdirs-includedir
-
 ##################################################
 # System detection
 ##################################################
@@ -213,7 +236,7 @@ endif
 include $(MAKEDIR)/system/$(SYSTEM).make
 
 # Always store detected system
-EM_CFG_SED+=-e's/@SYSTEM@/$(SYSTEM)/g'$
+EM_CONFIG_SED+=-e's/@SYSTEM@/$(SYSTEM)'
 
 # -- Finish system dependent init --
 
@@ -268,14 +291,20 @@ ifndef PKG_CONFIG
  PKG_CONFIG:=$(DEFAULT_PKG_CONFIG)
 endif
 
+# Move file _to_ file or _in_ directory
+em_move_to?=mv -f -T $1 $2
+em_move_in?=mv -f -t $2 $1
+
 # Rename file $1 to $2 if the files are different (or $2 does not exist)
-MoveIfNotEqual?=cmp -s $1 $2 || $(MOVE) -fT $1 $2
+em_move_ne?=cmp -s $1 $2 || $(em_move_to)
+
+em_write_ne?=echo '$2' | cmp -s $1 || echo '$2' > $1
 
 UpdateIfNotEqual?=echo "$2" | cmp -s - $1 || echo "$2" > $1
 updateIfNotEqual?=echo '$1' | cmp -s - $@ || echo '$1' > $@
 
 ##################################################
-# Compiler
+# Compiler & Hardware
 ##################################################
 
 # Internal flags
@@ -289,16 +318,27 @@ EmLinkFlags:=
 EmLinkFlags.dll:=
 EmLinkFlags.bin:=
 
+# -- Init compiler --
+
 ifndef COMPILER
  COMPILER:=$(DEFAULT_COMPILER)
 else
- EM_CFG_SED+=-e's/#COMPILER=@COMPILER@/COMPILER=$(COMPILER)/g'
+ EM_CONFIG_SED+=-e's/#COMPILER=@COMPILER@/COMPILER=$(COMPILER)'
 endif
 include $(MAKEDIR)/compiler/$(COMPILER).make
 
+# -- Init hardware --
+
+ifndef HARDWARE
+ HARDWARE:=$(DEFAULT_HARDWARE)
+else
+ EM_CONFIG_SED+=-e's/#HARDWARE=@HARDWARE@/HARDWARE=$(HARDWARE)'
+endif
+include $(MAKEDIR)/hardware/$(HARDWARE).make
+
 # -- Compiler tools --
 
-ifndef AR
+ifeq ($(origin ARFLAGS),default)
  AR:=$(DEFAULT_AR)
 endif
 
@@ -326,14 +366,12 @@ ifndef LDLIBS
  LDLIBS:=
 endif
 
-# -- Recursive internal flags --
-
-#EM_CPPFLAGS:=
-#EM_CFLAGS:=
-#EM_CXXFLAGS:=
+# -- Compilation parameters --
 
 WANT_PIE:=
 WANT_PIC:=
+
+# -- Linking parameters --
 
 DEF:=
 IMP:=
@@ -341,39 +379,13 @@ MAP:=
 SONAME:=
 
 ##################################################
-# Hardware
-##################################################
-
-#ifndef ENVIRONMENT
-# ENVIRONMENT:=$(DEFAULT_ENVIRONMENT)
-#else
-# EM_CFG_SED+=-e's/#ENVIRONMENT=@ENVIRONMENT@/ENVIRONMENT=$(ENVIRONMENT)/g'
-#endif
-#include $(MAKEDIR)/environment/$(ENVIRONMENT).make
-
-ifndef HARDWARE
- HARDWARE:=$(DEFAULT_HARDWARE)
-else
- EM_CFG_SED+=-e's/#HARDWARE=@HARDWARE@/HARDWARE=$(HARDWARE)/g'
-endif
-include $(MAKEDIR)/hardware/$(HARDWARE).make
-
-##################################################
 # Support rules
 ##################################################
-
-# initialize directory for building out of source
-# - do not use when building in source
-# - TODO : check in source build
-init:
-	@echo "Creating proxy Makefile"
-	@echo "srcdir=$(srcdir)"            > $(if $(builddir),$(builddir)/)Makefile
-	@echo "include $(srcdir)/Makefile" >> $(if $(builddir),$(builddir)/)Makefile
 
 # create default config.make
 config:
 	@echo "Creating default config.make"
-	@sed $(EM_CFG_SED) $(MAKEDIR)/config.make.in > config.make
+	@sed $(EM_CFG_SED) $(MAKEDIR)/platform/config.make.in > config.make
 
 clean:
 	$(RMDIR) $(sort $(BINDIR) $(DLLDIR) $(LIBDIR) $(OBJDIR))
@@ -393,7 +405,7 @@ $(EM_PKG_BUILDDIRS_SED):always $$(@D)/.f
 	@echo 's|@INCLUDEDIR@|$(if $(call seq,$(INCDIR),./include),$${prefix}/include,$(INCDIR))|g' >> $@.new
 	@echo 's|@LIBDIR@|$(if $(call seq,$(LIBDIR),./lib),$${exec_prefix}/lib,$(LIBDIR))|g'        >> $@.new
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call MoveIfNotEqual,$@.new,$@)
+	@$(call em_move_ne,$@.new,$@)
 
 $(EM_PKG_INSTALLDIRS_SED):always $$(@D)/.f
 	@echo 's|@PREFIX@|$(prefix)|g' > $@.new
@@ -401,7 +413,7 @@ $(EM_PKG_INSTALLDIRS_SED):always $$(@D)/.f
 	@echo 's|@INCLUDEDIR@|$(if $(call seq,$(includedir),$(default_includedir)),$${prefix}/include,$(includedir))|g' >> $@.new
 	@echo 's|@LIBDIR@|$(if $(call seq,$(libdir),$(default_libdir)),$${exec_prefix}/lib,$(libdir))|g'                >> $@.new
 	@$(if $(VERBOSE),echo "Checking $@")
-	@$(call MoveIfNotEqual,$@.new,$@)
+	@$(call em_move_ne,$@.new,$@)
 
 ##################################################
 # Command file parameters
