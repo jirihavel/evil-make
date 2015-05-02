@@ -2,9 +2,11 @@
 
 include $(MAKEDIR)/compile.make
 
-EM_OBJDIR:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))
+EM_SRCDIR:=$(SRCDIR)$(if $(SRCPATH),/$(SRCPATH))
+EM_OBJDIR:=$(OBJDIR)$(if $(CONFIG),/$(CONFIG))$(if $(SRCPATH),/$(SRCPATH))
+EM_BINDIR:=$(BINDIR)$(if $(BINPATH),/$(BINPATH))
 
-BIN:=$(patsubst $(SRCDIR)/%,$(BINDIR)/%$(BINEXT),$(basename $(SRCS)))
+BIN:=$(patsubst $(EM_SRCDIR)/%,$(EM_BINDIR)/%$(BINEXT),$(basename $(SRCS)))
 
 EM_CMD:=$(EM_OBJDIR)/.em/$(NAME)$(SUFFIX).bin.cmd 
 
@@ -19,7 +21,7 @@ $(EM_CMD):always $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d)) $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
 	@$(call UpdateIfNotEqual,$@,$(Link.bin) $(EM_LIBS) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS))))
 
-$(BIN):$(BINDIR)/%$(BINEXT):$(EM_OBJDIR)/%.c$(OBJEXT) $(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(EM_CMD) $$(@D)/.f
+$(BIN):$(EM_BINDIR)/%$(BINEXT):$(EM_OBJDIR)/%.c$(OBJEXT) $(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(EM_CMD) $$(@D)/.f
 	@echo "Linking $@"
 	$(if $(VERBOSE),,@)$(Link.bin) $< $(EM_LIBS) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS)))
 	@objcopy --only-keep-debug $@ $@$(DBGEXT)
@@ -27,7 +29,9 @@ $(BIN):$(BINDIR)/%$(BINEXT):$(EM_OBJDIR)/%.c$(OBJEXT) $(foreach d,$(DEPS),$(EmLi
 	@objcopy --add-gnu-debuglink=$@$(DBGEXT) $@
 
 EM_CMD:=
+EM_SRCDIR:=
 EM_OBJDIR:=
+EM_BINDIR:=
 
 include $(MAKEDIR)/platform/install-bin.make
 # end

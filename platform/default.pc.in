@@ -4,7 +4,7 @@ includedir=@INCLUDEDIR@
 libdir=@LIBDIR@
 
 Name:lib@NAME@
-Description:
+Description:@DESCRIPTION@
 Version:@VERSION@
 Requires:
 Cflags:-I${includedir}

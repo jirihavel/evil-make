@@ -75,14 +75,12 @@ include $(MAKEDIR)/pic.make
 # - SRCDIR, OBJDIR and BINDIR must be modified together
 NAME:=foo
 DEPS:=libfoo.lib
-$(call push_var,SRCDIR,$(SRCDIR)/foo/tools)
-$(call push_var,OBJDIR,$(OBJDIR)/foo/tools)
-$(call push_var,BINDIR,$(BINDIR)/foo)
-SRCS:=$(wildcard $(SRCDIR)/*.c)
+SRCS:=$(wildcard $(SRCDIR)/foo/tools/*.c)
+$(call push_var,SRCPATH,foo/tools)
+$(call push_var,BINPATH,foo)
 include $(MAKEDIR)/single-bin.make
-$(call pop_var,SRCDIR)
-$(call pop_var,OBJDIR)
-$(call pop_var,BINDIR)
+$(call pop_var,SRCPATH)
+$(call pop_var,BINPATH)
 
 # Build all src/bar/*.c as a dynamic library
 # - lib/libbar.so, bin/[cyg]bar.dll + lib/libbar.a

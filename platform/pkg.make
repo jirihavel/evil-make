@@ -16,6 +16,7 @@ $(PKG) em-install-pkg$(NAME):EM_PKG_SED:=$(EM_PKG_SED)
 $(EM_PKG_SED):always $$(@D)/.f
 	@$(if $(VERBOSE),echo "Checking $@")
 	@$(call em_write_ne,$@,s|@VERSION@|$(EM_VERSION)|g)
+#	@echo 's|@VERSION@|$(EM_VERSION)|g
 
 $(PKG):$(PKG_IN) $(EM_PKG_SED) $(EM_PKG_BUILDDIRS_SED) $$(@D)/.f
 	$(if $(VERBOSE),,@)sed -f $(EM_PKG_SED) -f $(EM_PKG_BUILDDIRS_SED) $< > $@
