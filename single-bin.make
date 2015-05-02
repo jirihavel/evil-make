@@ -28,6 +28,14 @@ $(BIN):$(EM_BINDIR)/%$(BINEXT):$(EM_OBJDIR)/%.c$(OBJEXT) $(foreach d,$(DEPS),$(E
 	@strip -g $@
 	@objcopy --add-gnu-debuglink=$@$(DBGEXT) $@
 
+# add other c++ extensions
+$(BIN):$(EM_BINDIR)/%$(BINEXT):$(EM_OBJDIR)/%.cpp$(OBJEXT) $(foreach d,$(DEPS),$(EmLibraryDeps.$d)) $(EM_CMD) $$(@D)/.f
+	@echo "Linking $@"
+	$(if $(VERBOSE),,@)$(Link.bin) $< $(EM_LIBS) $(if $(EM_PKGS),$(shell $(PKG_CONFIG) --libs $(EM_PKGS)))
+	@objcopy --only-keep-debug $@ $@$(DBGEXT)
+	@strip -g $@
+	@objcopy --add-gnu-debuglink=$@$(DBGEXT) $@
+
 EM_CMD:=
 EM_SRCDIR:=
 EM_OBJDIR:=
