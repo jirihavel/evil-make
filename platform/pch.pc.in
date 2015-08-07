@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+includedir=@INCLUDEDIR@
+libdir=@LIBDIR@
+
+Name:pch@NAME@
+Description:
+Version:
+Requires:
+Cflags:-I@PCHDIR@ -I${includedir} -include @INCLUDE@ -Winvalid-pch
+Libs:

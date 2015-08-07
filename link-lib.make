@@ -23,10 +23,12 @@ EmLibraryDeps.lib$(NAME).lib:=$(LIB) $(foreach d,$(DEPS),$(EmLibraryDeps.$d))
 EmLibraryPkgs.lib$(NAME).lib:=$(PKG)
 # But pkg dependencies need transitive closure
 EmLibraryPkgDeps.lib$(NAME).lib:=$(PKG) $(foreach d,$(DEPS),$(EmLibraryPkgDeps.$d))
+EmLibrarySrcDeps.lib$(NAME).lib:=
 
 EmLibraryDeps.lib$(NAME):=$(EmLibraryDeps.lib$(NAME).lib)
 EmLibraryPkgs.lib$(NAME):=$(EmLibraryPkgs.lib$(NAME).lib)
 EmLibraryPkgDeps.lib$(NAME):=$(EmLibraryPkgDeps.lib$(NAME).lib)
+EmLibrarySrcDeps.lib$(NAME):=$(EmLibrarySrcDeps.lib$(NAME).lib)
 
 ##################################################
 # Install

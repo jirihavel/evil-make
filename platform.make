@@ -67,7 +67,7 @@ include $(MAKEDIR)/platform/defaults.make
 ifndef VERBOSE
  VERBOSE:=$(DEFAULT_VERBOSE)
 else ifneq ($(VERBOSE),)
- EM_CONFIG_SED+=-e's/#VERBOSE:=1/VERBOSE:=1'
+ EM_CONFIG_SED+=-e's|#VERBOSE:=1|VERBOSE:=1|'
 endif
 
 ##################################################
@@ -236,7 +236,7 @@ endif
 include $(MAKEDIR)/system/$(SYSTEM).make
 
 # Always store detected system
-EM_CONFIG_SED+=-e's/@SYSTEM@/$(SYSTEM)'
+EM_CONFIG_SED+=-e's/@SYSTEM@/$(SYSTEM)/'
 
 # -- Finish system dependent init --
 
@@ -366,13 +366,21 @@ ifndef LDLIBS
  LDLIBS:=
 endif
 
+# -- General parameters --
+
+LANG:=
+LANG.c:=
+LANG.cxx:=
+
 # -- Compilation parameters --
 
+WANT_PCH:=
 WANT_PIE:=
 WANT_PIC:=
 
 # -- Linking parameters --
 
+WANT_MAP:=
 DEF:=
 IMP:=
 MAP:=
@@ -385,7 +393,7 @@ SONAME:=
 # create default config.make
 config:
 	@echo "Creating default config.make"
-	@sed $(EM_CFG_SED) $(MAKEDIR)/platform/config.make.in > config.make
+	@sed $(EM_CONFIG_SED) $(MAKEDIR)/platform/config.make.in > config.make
 
 clean:
 	$(RMDIR) $(sort $(BINDIR) $(DLLDIR) $(LIBDIR) $(OBJDIR))

@@ -1,1 +1,3 @@
-CompileFlags+=-march=native
+# vim: set ft=make:
+
+EmCompileFlags+=-march=native

@@ -1,1 +1,3 @@
-CompileFlags+=-mtune=generic
+# vim: set ft=make:
+
+EmCompileFlags+=-mtune=generic

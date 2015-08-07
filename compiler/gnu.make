@@ -20,7 +20,50 @@ EM_CXXFLAGS=
 
 ################################################################################
 # Compilation
+#
+# Input :
+# - file extension (implies general language)
+# - LANG variable (language + version)
+# 
+# extension(c,cpp,h,...) -> language (c,c++) + LANG[.c,c++] -> language version
 ################################################################################
+
+# -- language by file extension --
+# headers have unknown type, LANG must be set
+EmSourceType.h  :=
+EmSourceType.c  :=c
+EmSourceType.C  :=cxx
+EmSourceType.cc :=cxx
+EmSourceType.cpp:=cxx
+EmSourceType.cxx:=cxx
+
+# function that gets language version from file extension and LANG
+# - e.g. .cpp -> c++ -> $(LANG.c++) / $(LANG) / c++ (first nonempty)
+em_lang=$(if $(EmSourceType$1),$(if $(LANG.$(EmSourceType$1)),$(LANG.$(EmSourceType$1)),$(if $(LANG),$(LANG),$(EmSourceType$1))),$(LANG))
+
+EmCompiler.:=echo "Unknown extension, LANG must be set"
+EmCompileFlags.:=
+
+# -- C compiler --
+
+EmCompiler.c  =$(CC)
+
+EmCompileFlags.c  :=
+EmCompileFlags.c99:=-std=c99
+EmCompileFlags.c11:=-std=c11
+
+# -- C++ compiler --
+
+$(foreach i,cxx cxx11 cxx14,$(eval EmCompiler.$i=$(CXX)))
+
+EmCompileFlags.cxx  :=
+EmCompileFlags.cxx11:=-std=c++11
+EmCompileFlags.cxx14:=-std=c++14
+
+# function that creates compilation command
+# - $@ output file
+# - $1 source file
+em_compile=$(EmCompiler.$(call em_lang,$1)) -o $@ -c -MMD -MP $(EmCompileFlags.$(call em_lang,$1)) -I$(INCDIR) $(if $(WANT_PIE),-fpie) $(if $(WANT_PIC),-fpic) $(CPPFLAGS)
 
 EmCompileLine=-o $@ -c -MMD -MP $(if $(WANT_PIE),-fpie) $(if $(WANT_PIC),-fpic) $(EmCompileFlags) $(EM_CPPFLAGS) $(CPPFLAGS)
 
@@ -33,9 +76,14 @@ EmCompile.cpp=$(EmCompile.cxx)
 EmCompile.cc=$(EmCompile.cxx)
 EmCompile.C=$(EmCompile.cxx)
 
+EmCompile.h=$(EmCompile.cxx)
+
 ################################################################################
 # Linking
 ################################################################################
+
+em_linker.c  :=$(CC)
+em_linker.c++:=$(CXX)
 
 # these contain ',' so can't be directly in if
 EM_GNU_MAP=-Wl,-Map=$(MAP)
