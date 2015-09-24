@@ -30,8 +30,8 @@ WANT_DEF:=1
 
 # Set some global flags
 # - can be overwritten per target, but the propagation depends on the initial rule so it is not reliable
-CFLAGS:=-std=c99
-CXXFLAGS:=-std=c++11
+#CFLAGS:=-std=c99
+#CXXFLAGS:=-std=c++11
 
 # Project configurations can be differenciated using :
 # CONFIG - long configuration name
@@ -39,6 +39,9 @@ CXXFLAGS:=-std=c++11
 # SUFFIX - short configuration suffix
 # - bin/foo<suffix>.exe, lib/libfoo<suffix>.a, ...
 # This allows to switch between multiple configurations without complete recompilation
+
+LANG.c:=c99
+LANG.cxx:=cxx11
 
 ################################################################################
 # Project pieces

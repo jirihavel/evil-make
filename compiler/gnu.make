@@ -38,7 +38,9 @@ EmSourceType.cpp:=cxx
 EmSourceType.cxx:=cxx
 
 # function that gets language version from file extension and LANG
-# - e.g. .cpp -> c++ -> $(LANG.c++) / $(LANG) / c++ (first nonempty)
+# - $1 file extension (e.g. ".c" ".cpp")
+# - output "c", "c99", "cxx", "cxx11", ...
+# - e.g. .cpp -> C++ => $(LANG.cxx) / $(LANG) / c++ (first nonempty)
 em_lang=$(if $(EmSourceType$1),$(if $(LANG.$(EmSourceType$1)),$(LANG.$(EmSourceType$1)),$(if $(LANG),$(LANG),$(EmSourceType$1))),$(LANG))
 
 EmCompiler.:=echo "Unknown extension, LANG must be set"
@@ -46,7 +48,7 @@ EmCompileFlags.:=
 
 # -- C compiler --
 
-EmCompiler.c  =$(CC)
+$(foreach i,c c99 c11,$(eval EmCompiler.$i=$(CC)))
 
 EmCompileFlags.c  :=
 EmCompileFlags.c99:=-std=c99
@@ -64,19 +66,6 @@ EmCompileFlags.cxx14:=-std=c++14
 # - $@ output file
 # - $1 source file
 em_compile=$(EmCompiler.$(call em_lang,$1)) -o $@ -c -MMD -MP $(EmCompileFlags.$(call em_lang,$1)) -I$(INCDIR) $(if $(WANT_PIE),-fpie) $(if $(WANT_PIC),-fpic) $(CPPFLAGS)
-
-EmCompileLine=-o $@ -c -MMD -MP $(if $(WANT_PIE),-fpie) $(if $(WANT_PIC),-fpic) $(EmCompileFlags) $(EM_CPPFLAGS) $(CPPFLAGS)
-
-# C sources
-EmCompile.c=$(CC) $(EmCompileLine) $(EmCompileFlags.c) $(EM_CFLAGS) $(CFLAGS)
-
-# C++ sources
-EmCompile.cxx=$(CXX) $(EmCompileLine) $(EmCompileFlags.cxx) $(EM_CXXFLAGS) $(CXXFLAGS)
-EmCompile.cpp=$(EmCompile.cxx)
-EmCompile.cc=$(EmCompile.cxx)
-EmCompile.C=$(EmCompile.cxx)
-
-EmCompile.h=$(EmCompile.cxx)
 
 ################################################################################
 # Linking

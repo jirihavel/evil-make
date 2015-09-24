@@ -2,9 +2,9 @@
 
 # First rule is the default one
 all:
-.PHONY:all check clean
 
 # Common phony rules
+.PHONY:all check clean
 .PHONY:installdirs installdirs-dev install install-dev
 	
 ##################################################
@@ -41,6 +41,7 @@ endif
 
 # Rule 'init' to set build outside of source tree
 # - proxy makefile sets source tree location and includes original makefile
+.PHONY:init
 ifeq ($(realpath $(makefile)),$(realpath $(builddir)/Makefile))
  init:
 	@echo "Building in source, command ignored"
@@ -50,7 +51,6 @@ else
 	@echo "srcdir=$(srcdir)"     > $(builddir)/Makefile
 	@echo "include $(makefile)" >> $(builddir)/Makefile
 endif
-.PHONY:init
 
 # MAKEDIR is path to this file
 ifndef MAKEDIR
@@ -443,4 +443,4 @@ PATCH_VERSION:=
 #initialize optional parameters to be empty
 # to get rid of warnings
 ADD_OBJS:=
-
+#end
