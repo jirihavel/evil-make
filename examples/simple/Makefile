@@ -1,58 +1,87 @@
-################################################################################
+############################################################################
 # Initialize the build platform
-################################################################################
-# - copy&paste this to any new Makefile, modify <makedir>
-# - <makedir> is path from Makefile to platform.make
-makedir:=../..
+############################################################################
+# - copy&paste this to any new Makefile, !!! modify include !!!
 # autodetect <srcdir> as the path to this Makefile
 ifndef srcdir
- srcdir:=$(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+ srcdir:=$(dir $(lastword $(MAKEFILE_LIST)))
 endif
 # include the platform header
 # - it includes config.make and may overwrite anything set before
-include $(if $(srcdir),$(srcdir)/)$(if $(makedir),$(makedir)/)platform.make
-# - now we can use "include $(MAKEDIR)/..."
-# - platform initialized, end of copy&paste 
+include $(srcdir)../../build.make
+# - now we can use "include $(makedir)..."
+# - platform initialized, end of copy&paste
 
-# We want default targets for all libraries and executables
-# executables : installdirs-name, install-name
-WANT_TARGET:=1
+#-------------------------
+# -- FOO --
+#-------------------------
 
-# We want linker MAP files
-WANT_MAP:=1
+# Take all source files
+FOO_SRCS:=$(wildcard $(srcdir)foo/*.c)
+# Compile them to object files
+# - dependencies are tracked automatically
+FOO_OBJS:=$(call em_compile,$(FOO_SRCS))
+# Link executable "foo" (e.g. foo.exe)
+FOO:=$(call em_link_bin,foo,$(FOO_OBJS))
 
-# Set some global flags
-# - can be overwritten per target, but the propagation depends on the initial rule so it is not reliable
-CFLAGS:=-std=c99
-CXXFLAGS:=-std=c++11
+all:$(FOO)
 
-# Project configurations can be differenciated using
-# CONFIG - long configuration name
-# - /obj/<config>/foo.c.o
-# SUFFIX - short configuration suffix
-# - foo<suffix>.exe, libfoo<suffix>.a, ...
-# This allows to switch between configuration without complete recompilation
+# Create all [un]install rules
+# - install[dirs][-foo]
+# - install[-foo]-stripped
+# - uninstall[-foo]
+$(call em_install_bin,foo,$(FOO))
 
-##################################################
-# Project pieces
-##################################################
-# All configuration variables here are expected to
-#  be nonrecursive and can be safely overwritten further in the makefile
-# SRCS is the list of source files
-# - will be compiled into object files according to their extensions
-# FLAGS, LIBS are parameters for compiler and linker
-# - flags are currently common for all source types
+#-------------------------
+# -- BAR --
+#
+# Setting parameters
+#-------------------------
 
-# Create implicit rules for everything in $(SRCDIR)
-include $(MAKEDIR)/simple.make
+# Parameter pack
+BAR_FLG:=$(call em_flags,bar)
+$(BAR_FLG):INCLUDE_DIRS:=$(srcdir)include
+$(BAR_FLG):DEFINITIONS:=NUMBER=42
 
-all:$(BINDIR)/a.exe $(BINDIR)/b.exe $(BINDIR)/c.exe $(BINDIR)/d.exe
+BAR_SRCS:=$(wildcard $(srcdir)bar/*.c)
+# Compile with parameter pack
+BAR_OBJS:=$(call em_compile,$(BAR_SRCS),$(BAR_FLG))
+BAR:=$(call em_link_bin,bar,$(BAR_OBJS))
 
-##################################################
-# Basic rules
-##################################################
-# - all, installdirs, install
+all:$(BAR)
 
-#DEPS:=main mainpp
-# all, installdirs and install for DEPS
-#include $(MAKEDIR)/rules.make
+$(call em_install_bin,bar,$(BAR))
+
+#-------------------------
+# -- BAZ --
+#
+# Using modules
+#-------------------------
+
+# We want modules :
+# - libc (some info about C standard library)
+# - sdl2
+include $(makedir)libc.make
+include $(makedir)sdl2.make
+
+BAZ_FLG:=$(call em_flags,baz)
+
+BAZ_SRCS:=$(wildcard $(srcdir)baz/*.c)
+BAZ_OBJS:=$(call em_compile,$(BAZ_SRCS),$(BAZ_FLG))
+BAZ:=$(call em_link_bin,baz,$(BAZ_OBJS),$(BAZ_LIBS))
+
+# - rule specific variables propagate, so the compilation will use these modules too
+$(BAZ):MODULES:=LIBC SDL2
+
+all:$(BAZ)
+
+$(call em_install_bin,baz,$(BAZ))
+
+# Module MOD exports :
+# MOD_MODULES - dependencies (other modules)
+# MOD_PACKAGES - pkg-config packages
+# MOD_INCLUDE_DIRS - -I
+# MOD_LIBRARY_DIRS - -L
+# MOD_DEFINITIONS - -D
+# MOD_LIBRARIES - other linker params
+#

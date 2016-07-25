@@ -1,0 +1,2 @@
+srcdir:=../
+include ../Makefile

@@ -1,9 +1,8 @@
-#include <foo.h>
+#include <bar.h>
 
 #include <stdlib.h>
 
 int main(int argc, char * argv[])
 {
-    foo_init();
     return EXIT_SUCCESS;
 }
