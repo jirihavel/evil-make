@@ -483,7 +483,7 @@ em_link_bin=$(call em_link_bin_to,$(BINDIR)$1$(BINEXT),$2,$3)
 #-------------------------------------------------
 
 WANT_LIB_INDEX?=$(true)
-WANT_LIB_THIN?=$(true)
+WANT_LIB_THIN?=$(false)
 CONFIG_VARS+=WANT_LIB_INDEX WANT_LIB_THIN
 
 # Default ARFLAGS
