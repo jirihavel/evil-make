@@ -10,7 +10,7 @@ endif
 ifneq ($(HAVE_UNAME),)
  OPERATING_SYSTEM_NAME:=$(shell uname -o)
  ifeq ($(OPERATING_SYSTEM_NAME),MinGW)
-  BUILD:=mingw
+  BUILD:=mingw32
  endif
  ifeq ($(OPERATING_SYSTEM_NAME),Cygwin)
   BUILD:=cygwin
