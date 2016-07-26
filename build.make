@@ -8,6 +8,15 @@ BUILD_MAKE_INCLUDED:=1
 .PHONY:all
 all:
 
+.PHONY:clean
+clean:
+
+.PHONY:install install-dev installdirs installdirs-dev
+install:
+install-dev:
+installdirs:
+installdirs-dev:
+
 # Stores important config to config.make
 # - Add variable names to CONFIG_VARS
 .PHONY:config
@@ -201,6 +210,9 @@ default_prefix=/usr/local
 default_exec_prefix=$(prefix)
 default_bindir=$(exec_prefix)/bin
 
+default_includedir=$(prefix)/include
+default_bindir=$(exec_prefix)/bin
+
 ifndef DESTDIR
  DESTDIR:=$(DEFAULT_DESTDIR)
 endif
@@ -256,13 +268,13 @@ em-installdirs-bindir:
 
 # includedir for includes
 .PHONY:em-installdirs-includedir
-#em-installdirs-includedir:
-#	$(MKDIR) $(DESTDIR)$(includedir)
+em-installdirs-includedir:
+	$(call em_mkdir,$(DESTDIR)$(includedir))
 
 # libdir for static and import libraries
 .PHONY:em-installdirs-libdir
-#em-installdirs-libdir:
-#	$(MKDIR) $(DESTDIR)$(libdir)
+em-installdirs-libdir:
+	$(call em_mkdir,$(DESTDIR)$(libdir))
 
 # pkgdir for pkg-config .pc files
 .PHONY:em-installdirs-pkgdir 
@@ -273,15 +285,34 @@ em-installdirs-bindir:
 # 2 - binaries to install
 define em_install_bin_rules =
 install:install-$1
-.PHONY:install-$1
-install-$1:$2 installdirs-$1
-	$(call em_install_program,$2,$$(DESTDIR)$$(bindir)/)
 installdirs:installdirs-$1
-.PHONY:installdirs-$1
+.PHONY:install-$1 installdirs-$1 em-install-$1
+install-$1:em-install-$1
 installdirs-$1:em-installdirs-bindir
+em-install-$1:$2 installdirs-$1
+	$(call em_install_program,$2,$$(DESTDIR)$$(bindir)/)
 endef
 
 em_install_bin=$(eval $(call em_install_bin_rules,$1,$2))
+
+# 1 - short name
+# 2 - libraries to install
+define em_install_lib_rules =
+install:install-$1
+installdirs:installdirs-$1
+install-dev:install-$1-dev
+installdirs-dev:installdirs-$1-dev
+.PHONY:install-$1 installdirs-$1 em-install-$1
+.PHONY:install-$1-dev installdirs-$1-dev em-install-$1-dev
+install-$1:installdirs-$1
+installdirs-$1:
+install-$1-dev:em-install-$1-dev
+installdirs-$1-dev:em-installdirs-libdir
+em-install-$1-dev:$2 installdirs-$1-dev
+	$(call em_install_data,$2,$$(DESTDIR)$$(libdir)/)
+endef
+
+em_install_lib=$(eval $(call em_install_lib_rules,$1,$2))
 
 ##################################################
 # == Compiler ==
@@ -290,7 +321,7 @@ em_install_bin=$(eval $(call em_install_bin_rules,$1,$2))
 # - COMPILER
 #
 # Variables :
-# - EM_C_COMPILER, EM_CXX_COMPILER
+# - EM_COMPILER_C, EM_COMPILER_CXX
 # - LIBEXT, OBJEXT, DEPEXT
 ##################################################
 
@@ -413,6 +444,9 @@ endef
 
 # <output> <input> [<flag_file>]
 em_compile_to=$1$(eval $(call em_file_compilation,$1,$2,$(if $3,$3,$1$(FLGEXT))))
+
+# <directory> {<source>} [<flag_file>]
+#em_compile_in=$(foreach s,$1,$(call em_compile_to,$(call em_src_to_obj,$s),$s,$2))
 
 # {<source>} [<flag_file>]
 em_compile=$(foreach s,$1,$(call em_compile_to,$(call em_src_to_obj,$s),$s,$2))
